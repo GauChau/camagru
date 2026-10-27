@@ -1,0 +1,34 @@
+# Configuration locale ; seul le modèle sans secrets est versionné.
+.env
+.env.*
+!.env.example
+
+# Fichiers générés par l'application et données locales.
+/storage/*
+!/storage/.gitkeep
+/data/
+/postgres_data/
+/backups/
+/dumps/
+/logs/
+/tmp/
+/cache/
+*.log
+*.dump
+*.sql.gz
+*.sql.bz2
+*.sql.xz
+*.sqlite
+*.sqlite3
+*.db
+
+# Fichiers locaux de l'éditeur et du système.
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Sujet de référence local, inutile pour exécuter le projet.
+/en.subject.pdf

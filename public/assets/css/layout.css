@@ -1,0 +1,177 @@
+@font-face {
+    font-family: "The Future";
+    src: url("../fonts/the-future-black-italic.woff2") format("woff2");
+    font-style: italic;
+    font-weight: 900;
+    font-display: swap;
+}
+
+:root {
+    color-scheme: light;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #111;
+    background: #fff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+}
+
+body > main {
+    flex: 1;
+    min-width: 0;
+}
+
+.wordmark {
+    margin: 0;
+    padding-right: 0.08em;
+    font-family: "The Future", "Arial Black", Arial, sans-serif;
+    font-size: clamp(48px, 16vw, 216px);
+    font-style: italic;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 144px;
+    min-height: 50px;
+    padding: 14px 30px;
+    border: 1px solid #111;
+    border-radius: 999px;
+    font: 500 15px/1.2 Arial, Helvetica, sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+}
+
+.button-outline {
+    color: #111;
+    background: #fff;
+}
+
+.button-outline:hover {
+    background: #f0f0f0;
+}
+
+.button-solid {
+    color: #fff;
+    background: #111;
+}
+
+.button-danger {
+    background: #b91c1c;
+    color: white;
+    border-color: #b91c1c;
+}
+
+.button-solid:hover {
+    background: #333;
+}
+
+.button:focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 5px;
+}
+
+.site-header,
+.site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px clamp(20px, 5vw, 80px);
+}
+
+.site-header {
+    border-bottom: 1px solid #ededed;
+}
+
+.site-brand {
+    color: inherit;
+    font-size: clamp(26px, 4vw, 36px);
+    text-decoration: none;
+}
+
+.site-nav,
+.footer-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.site-nav .button {
+    min-width: 100px;
+    min-height: 44px;
+    padding: 10px 22px;
+    font-size: 14px;
+}
+
+.site-footer {
+    flex-wrap: wrap;
+    border-top: 1px solid #ededed;
+    color: #666;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.site-footer small {
+    font-size: inherit;
+}
+
+.footer-links {
+    gap: 24px;
+}
+
+.footer-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: inherit;
+    text-decoration: none;
+    text-underline-offset: 4px;
+}
+
+.footer-links a:hover {
+    color: #111;
+    text-decoration: underline;
+}
+
+.site-brand:focus-visible,
+.footer-links a:focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 5px;
+}
+
+@media (max-width: 520px) {
+    .site-header {
+        flex-direction: column;
+        gap: 16px;
+        padding-block: 20px;
+    }
+
+    .site-footer {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .button {
+        transition: none;
+    }
+}

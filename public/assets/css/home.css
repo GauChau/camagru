@@ -1,0 +1,32 @@
+.welcome {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
+}
+
+.welcome-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 36px;
+}
+
+@media (max-width: 480px) {
+    .welcome {
+        padding-inline: 20px;
+    }
+
+    .welcome-actions {
+        gap: 10px;
+        margin-top: 28px;
+    }
+
+    .button {
+        min-width: 128px;
+        min-height: 48px;
+    }
+}
+
