@@ -99,6 +99,29 @@ body > main {
     border-bottom: 1px solid #ededed;
 }
 
+.settings-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #111;
+    border-radius: 50%;
+    color: #fff;
+    background: #111;
+    text-decoration: none;
+}
+
+.settings-link:hover {
+    background: #333;
+}
+
+.settings-link:focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 5px;
+}
+
 .site-brand {
     color: inherit;
     font-size: clamp(26px, 4vw, 36px);
@@ -161,6 +184,17 @@ body > main {
         flex-direction: column;
         gap: 16px;
         padding-block: 20px;
+    }
+
+    .site-header-authenticated .site-nav {
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
+    .site-header-authenticated .site-nav .button {
+        min-width: 0;
+        padding-inline: 12px;
+        font-size: 12px;
     }
 
     .site-footer {

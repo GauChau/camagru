@@ -99,6 +99,21 @@ Ils vérifient le parcours HTTP, les champs invalides, les doublons, le hash et
 les contraintes PostgreSQL. Ils créent des comptes portant un préfixe aléatoire
 et les suppriment à la fin.
 
+## Paramètres du compte
+
+Les utilisateurs connectés accèdent à `/settings.php` avec l’engrenage situé en
+haut à droite du header. Ils peuvent modifier leur login, leur email et leur mot
+de passe en confirmant leur mot de passe actuel. Les champs de nouveau mot de
+passe sont facultatifs ; s’ils sont remplis, le mot de passe doit contenir au
+moins 10 caractères et un chiffre, avec confirmation. Le login et l’email restent
+uniques sans distinction de casse.
+
+Les tests créent deux comptes temporaires puis les suppriment automatiquement :
+
+```sh
+docker compose exec -T web php tests/settings.php
+```
+
 ## Emails locaux
 
 PHP dispose de GD (JPEG/PNG), Fileinfo et PDO PostgreSQL. `mail()` utilise le

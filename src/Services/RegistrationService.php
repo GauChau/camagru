@@ -4,12 +4,15 @@ declare(strict_types=1);
 namespace Camagru\Services;
 
 use Camagru\Repositories\UserRepository;
+use Camagru\Services\ActivationService;
 use PDOException;
 
 final class RegistrationService
 {
-    public function __construct(private UserRepository $users)
-    {
+    public function __construct(
+        private UserRepository $users,
+        private ActivationService $activation
+    ) {
     }
 
     /** Retourne les erreurs du formulaire, ou un tableau vide si le compte est créé. */
@@ -61,11 +64,7 @@ final class RegistrationService
             return $this->findConflicts($login, $email)
                 ?: ['registration' => 'Ce login ou cette adresse email est déjà utilisé.'];
         }
-
-
-        $test = $this->sendActivationEmail($login, $email, $token);
-
-        return [];
+        return $this->activation->sendActivationEmail($email, $token);
     }
 
     private function findConflicts(string $login, string $email): array
@@ -83,23 +82,5 @@ final class RegistrationService
         return $errors;
     }
 
-    private function sendActivationEmail(string $login, string $email, string $token):bool
-    {
-        $errors= [];
-        // $lien = $token;
-        $lien = rtrim(getenv('APP_URL'), '/')
-            . '/activate.php?'
-            . http_build_query(['token' => $token]);
-        $ok = mail(
-            $email,
-            'Confirme ton compte Camagru',
-            "Clique sur ce lien pour activer ton compte :\r\n" . $lien,
-            [
-                'From' => 'no-reply@camagru.test',
-                'Content-Type' => 'text/plain; charset=UTF-8',
-            ]
-        );
-        
-        return $ok;
-    }
+
 }

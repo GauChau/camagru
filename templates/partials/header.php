@@ -3,7 +3,7 @@
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
-$isLoggedIn = ($_SESSION['login_success'] ?? false) === true;
+$isLoggedIn = isset($_SESSION['user_id']);
 
 // Le jeton doit exister avant d'être placé dans le formulaire de déconnexion.
 if ($isLoggedIn && !is_string($_SESSION['logout_csrf'] ?? null)) {
@@ -26,7 +26,7 @@ if ($isLoggedIn && !is_string($_SESSION['logout_csrf'] ?? null)) {
     <?php endforeach; ?>
 </head>
 <body>
-    <header class="site-header">
+    <header class="site-header<?= $isLoggedIn ? ' site-header-authenticated' : '' ?>">
         <a class="wordmark site-brand" href="/" aria-label="Camagru — Accueil">Camagru</a>
         <nav class="site-nav" aria-label="Accès au compte">
             <?php if ($isLoggedIn): ?>
@@ -40,6 +40,12 @@ if ($isLoggedIn && !is_string($_SESSION['logout_csrf'] ?? null)) {
                         Logout
                     </button>
                 </form>
+                <a class="settings-link" href="/settings.php" aria-label="User settings" title="User settings">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="m10 3-.6 2.7-1.6.9-2.6-.8-2 3.4 2 1.9v1.8l-2 1.9 2 3.4 2.6-.8 1.6.9.6 2.7h4l.6-2.7 1.6-.9 2.6.8 2-3.4-2-1.9v-1.8l2-1.9-2-3.4-2.6.8-1.6-.9L14 3Z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </a>
             <?php else: ?>
                 <a class="button button-outline" href="/login.php">Login</a>
                 <a class="button button-solid" href="/register.php">Register</a>

@@ -3,14 +3,21 @@ declare(strict_types=1);
 
 use Camagru\Database;
 use Camagru\Repositories\UserRepository;
+use Camagru\Services\ActivationService;
 use Camagru\Services\RegistrationService;
 
 require_once dirname(__DIR__) . '/src/Database.php';
 require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
+require_once dirname(__DIR__) . '/src/Services/ActivationService.php';
 require_once dirname(__DIR__) . '/src/Services/RegistrationService.php';
 
 session_start();
 header('Cache-Control: no-store');
+
+if (isset($_SESSION['user_id'])) {
+    header('Location: /profile.php', true, 303);
+    exit;
+}
 
 $errors = [];
 $values = ['login' => '', 'email' => ''];
@@ -39,7 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             $users = new UserRepository(Database::connect());
-            $registration = new RegistrationService($users);
+            $activation = new ActivationService($users);
+            $registration = new RegistrationService($users, $activation);
             $errors = $registration->register($values['login'], $values['email'], $password, $confirmation);
 
             if ($errors === []) {

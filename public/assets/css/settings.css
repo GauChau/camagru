@@ -1,0 +1,46 @@
+.settings-page {
+    align-items: flex-start;
+    padding-block: 48px;
+}
+
+.settings-panel {
+    max-width: 440px;
+}
+
+.settings-status {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.settings-status[role="status"] {
+    color: #166534;
+}
+
+.settings-status[role="alert"] {
+    padding-left: 20px;
+    color: #b91c1c;
+}
+
+.settings-password {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    margin: 8px 0 0;
+    padding: 20px 0 0;
+    border: 0;
+    border-top: 1px solid #ededed;
+}
+
+.settings-password legend {
+    padding: 0 12px 0 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.settings-help {
+    margin: 0;
+    color: #737373;
+    font-size: 13px;
+    line-height: 1.6;
+}

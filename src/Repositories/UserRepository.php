@@ -31,6 +31,57 @@ final class UserRepository
         return $query->fetchColumn() !== false;
     }
 
+    public function findById(int $id): ?array
+    {
+        $query = $this->database->prepare('SELECT id, login, email, password FROM users WHERE id = :id');
+        $query->execute(['id' => $id]);
+        $user = $query->fetch();
+
+        return $user === false ? null : $user;
+    }
+
+    public function isLoginUsedByOther(string $login, int $userId): bool
+    {
+        $query = $this->database->prepare(
+            'SELECT 1 FROM users WHERE lower(btrim(login)) = lower(btrim(:login)) AND id <> :id LIMIT 1'
+        );
+        $query->execute(['login' => $login, 'id' => $userId]);
+
+        return $query->fetchColumn() !== false;
+    }
+
+    public function isEmailUsedByOther(string $email, int $userId): bool
+    {
+        $query = $this->database->prepare(
+            'SELECT 1 FROM users WHERE lower(btrim(email)) = lower(btrim(:email)) AND id <> :id LIMIT 1'
+        );
+        $query->execute(['email' => $email, 'id' => $userId]);
+
+        return $query->fetchColumn() !== false;
+    }
+
+    public function updateSettings(
+        int $userId,
+        string $login,
+        string $email,
+        ?string $passwordHash,
+        string $currentPasswordHash
+    ): bool {
+        $query = $this->database->prepare(
+            'UPDATE users SET login = :login, email = :email, password = COALESCE(:password, password)
+            WHERE id = :id AND password = :current_password'
+        );
+        $query->execute([
+            'id' => $userId,
+            'login' => $login,
+            'email' => $email,
+            'password' => $passwordHash,
+            'current_password' => $currentPasswordHash,
+        ]);
+
+        return $query->rowCount() === 1;
+    }
+
     public function create(string $login, string $email, string $passwordHash, string $activationTokenHash): void
     {
         // Les valeurs sont transmises séparément du SQL, jamais concaténées dedans.
@@ -100,6 +151,49 @@ final class UserRepository
         $activation_token_hash = $query->fetchColumn();
 
         return $activation_token_hash === false ? null : $activation_token_hash;
+    }
+
+    public function getUserIdByActivationToken(string $token): ?int
+    {
+        $query = $this->database->prepare(
+            'SELECT id FROM users WHERE activation_token_hash = :token_hash'
+        );
+        $query->execute([
+            'token_hash' => hash('sha256', $token),
+        ]);
+        $id = $query->fetchColumn();
+
+        return $id === false ? null : (int) $id;
+    }
+
+    public function updateActivationStatus(int $id): bool
+    {
+        $query = $this->database->prepare(
+            'UPDATE users
+            SET activation = TRUE,
+                activation_token_hash = NULL,
+                activation_token_expires_at = NULL
+            WHERE id = :idtoactivate'
+        );
+        $query->execute(['idtoactivate' => $id]);
+
+        return $query->rowCount() === 1;
+    }
+
+    public function updateEmailToken(string $email, string $tokenHash): bool
+    {
+        $query = $this->database->prepare(
+            'UPDATE users
+            SET activation_token_hash = :tokenhash
+            WHERE lower(btrim(email)) = lower(btrim(:email))
+                AND activation = FALSE'
+        );
+        $query->execute([
+            'email' => $email,
+            'tokenhash' => $tokenHash,
+        ]);
+
+        return $query->rowCount() === 1;
     }
 
 

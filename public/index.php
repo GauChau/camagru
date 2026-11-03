@@ -1,3 +1,5 @@
 <?php
-// TODO : recevoir et router les requêtes quand tu écriras l'application.
+session_start();
+header('Cache-Control: no-store');
+
 require dirname(__DIR__) . '/templates/home.php';

@@ -14,6 +14,11 @@ require_once dirname(__DIR__) . '/src/Services/LoginService.php';
 session_start();
 header('Cache-Control: no-store');
 
+if (isset($_SESSION['user_id'])) {
+    header('Location: /profile.php', true, 303);
+    exit;
+}
+
 $errors = [];
 
 if (!isset($_SESSION['login_csrf'])) {
