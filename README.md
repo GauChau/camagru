@@ -120,6 +120,12 @@ puis les suppriment :
 docker compose exec -T web php tests/overlays.php
 ```
 
+L’éditeur est réservé aux utilisateurs connectés. Sa section « Mes créations »
+affiche les miniatures de tous les montages du compte connecté, du plus récent au
+plus ancien. Les nouvelles captures s’ajoutent immédiatement en tête de liste et
+restent présentes après rechargement. Cliquer sur une miniature ouvre le montage
+en grand. Sur mobile, cette section passe sous l’éditeur.
+
 ## Activation du compte
 
 Le module d’activation gère la création du compte inactif, le lien envoyé par

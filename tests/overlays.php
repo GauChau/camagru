@@ -9,6 +9,7 @@ use Camagru\Database;
 
 $database = null;
 $userId = null;
+$otherUserId = null;
 $directory = dirname(__DIR__) . '/storage/calcs';
 if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
     throw new RuntimeException('Impossible de créer le dossier des calques de test.');
@@ -64,11 +65,10 @@ $request = static function (string $method, string $url, ?array $fields = null) 
 
 try {
     $page = $request('GET', '/camedit.php');
-    $check($page['status'] === 200 && str_contains($page['body'], 'value="' . $name . '"'), 'L’éditeur doit proposer les calques du stock.');
+    $check($page['status'] === 303 && !str_contains($page['body'], 'photos-panel'), 'Un visiteur doit être redirigé avant de voir l’éditeur.');
     $thumbnail = $request('GET', '/overlay.php?name=' . rawurlencode($name));
     $check($thumbnail['status'] === 200 && $thumbnail['type'] === 'image/png', 'Le calque doit être accessible comme vignette PNG.');
     $check(imagecreatefromstring($thumbnail['body']) !== false, 'La vignette doit contenir une image valide.');
-    $check(!str_contains($page['body'], 'value="' . $invalidName . '"') && !str_contains($page['body'], 'value="' . $linkName . '"'), 'Le catalogue doit exclure les faux PNG et les liens symboliques.');
     foreach (['../.gitkeep', $invalidName, $linkName, 'unknown.png'] as $invalidNameRequest) {
         $response = $request('GET', '/overlay.php?name=' . rawurlencode($invalidNameRequest));
         $check($response['status'] === 404, 'Les fichiers hors catalogue doivent être inaccessibles.');
@@ -83,11 +83,37 @@ try {
     $insert->execute(['login' => $login, 'email' => $login . '@example.test', 'password' => password_hash($password, PASSWORD_ARGON2ID)]);
     $userId = (int) $insert->fetchColumn();
     $insert->closeCursor();
+    $insert->execute(['login' => $login . '_other', 'email' => $login . '_other@example.test', 'password' => password_hash($password, PASSWORD_ARGON2ID)]);
+    $otherUserId = (int) $insert->fetchColumn();
+    $insert->closeCursor();
     $loginPage = $request('GET', '/login.php');
     $check(preg_match('/name="csrf_token"\s+value="([a-f0-9]{64})"/', $loginPage['body'], $token) === 1, 'Le formulaire de connexion doit fournir son CSRF.');
     $loggedIn = $request('POST', '/login.php', ['login' => $login, 'password' => $password, 'csrf_token' => $token[1]]);
     $check($loggedIn['status'] === 303, 'Le compte de test doit pouvoir se connecter.');
     $page = $request('GET', '/camedit.php');
+    $check($page['status'] === 200 && str_contains($page['body'], 'value="' . $name . '"'), 'L’éditeur doit proposer les calques du stock après connexion.');
+    $check(!str_contains($page['body'], 'value="' . $invalidName . '"') && !str_contains($page['body'], 'value="' . $linkName . '"'), 'Le catalogue doit exclure les faux PNG et les liens symboliques.');
+    $check(str_contains($page['body'], 'id="photos-empty"') && !str_contains($page['body'], 'class="photo-thumbnail"'), 'Un nouveau compte voit l’état vide de ses créations.');
+    $imageDirectory = dirname(__DIR__) . '/storage/cam_images';
+    if (!is_dir($imageDirectory)) mkdir($imageDirectory, 0770, true);
+    $insertImage = $database->prepare("INSERT INTO images (user_id, file_key, created_at) VALUES (:user, :key, '2000-01-01 00:00:00+00') RETURNING id");
+    $previousIds = [];
+    for ($i = 0; $i < 9; $i++) {
+        $key = bin2hex(random_bytes(32));
+        file_put_contents($imageDirectory . '/' . $key . '.png', file_get_contents($path));
+        $insertImage->execute(['user' => $i === 8 ? $otherUserId : $userId, 'key' => $key]);
+        $id = (int) $insertImage->fetchColumn();
+        $insertImage->closeCursor();
+        if ($i === 8) {
+            $otherImageId = $id;
+        } else {
+            $previousIds[] = $id;
+        }
+    }
+    $page = $request('GET', '/camedit.php?user_id=' . $otherUserId);
+    preg_match_all('/class="photo-thumbnail" href="\/image.php\?id=(\d+)"/', $page['body'], $thumbnails);
+    $check(array_map('intval', $thumbnails[1]) === array_reverse($previousIds), 'La section latérale contient tous les montages du compte connecté, dans un ordre stable du plus récent au plus ancien.');
+    $check(!str_contains($page['body'], '/image.php?id=' . $otherImageId . '"'), 'Un identifiant dans l’URL ne permet pas de remplacer l’historique par celui d’un autre compte.');
     $check(preg_match('/data-csrf-token="([a-f0-9]{64})"/', $page['body'], $token) === 1, 'L’éditeur doit fournir son CSRF.');
     $capture = imagecreatetruecolor(4, 4);
     imagefill($capture, 0, 0, imagecolorallocate($capture, 0, 255, 0));
@@ -113,6 +139,11 @@ try {
     $saved = $request('POST', '/camedit.php', $fields + ['overlay' => $name]);
     $result = json_decode($saved['body'], true, flags: JSON_THROW_ON_ERROR);
     $check($saved['status'] === 201 && isset($result['file_key'], $result['image']), 'Le serveur doit enregistrer le montage et retourner son aperçu.');
+    $check(isset($result['image_url']) && str_starts_with($result['image_url'], '/image.php?id='), 'La capture retourne une URL persistante pour ajouter sa miniature sans rechargement.');
+    $check($request('GET', $result['image_url'])['status'] === 200, 'La miniature nouvellement enregistrée est accessible.');
+    $history = $request('GET', '/camedit.php');
+    preg_match_all('/class="photo-thumbnail" href="([^\"]+)"/', $history['body'], $thumbnails);
+    $check(count($thumbnails[1]) === 9 && $thumbnails[1][0] === $result['image_url'], 'Après rechargement, la nouvelle capture est en tête de tous les montages précédents.');
     $composite = imagecreatefromstring(base64_decode(substr($result['image'], strlen('data:image/png;base64,')), true));
     $check($composite !== false && imagesx($composite) === 4 && imagesy($composite) === 4, 'Le montage doit conserver la taille de la capture.');
     $check((imagecolorat($composite, 0, 0) & 0xffffff) === 0xff0000, 'Le pixel rouge du calque doit recouvrir la capture.');
@@ -152,14 +183,15 @@ try {
         || ($maximum['status'] === 201 && isset($maximumResult['file_key'], $maximumResult['image'])), 'La taille maximale doit produire un montage ou un refus contrôlé, jamais une erreur fatale.');
     echo $checks . " vérifications réussies (stock, vignettes et montage serveur).\n";
 } finally {
-    if ($userId !== null) {
+    foreach ([$userId, $otherUserId] as $cleanupUserId) {
+        if ($cleanupUserId === null) continue;
         $delete = $database->prepare('DELETE FROM images WHERE user_id = :id RETURNING file_key');
-        $delete->execute(['id' => $userId]);
+        $delete->execute(['id' => $cleanupUserId]);
         foreach ($delete->fetchAll(PDO::FETCH_COLUMN) as $key) {
             @unlink(dirname(__DIR__) . '/storage/cam_images/' . $key . '.png');
         }
         $delete = $database->prepare('DELETE FROM users WHERE id = :id');
-        $delete->execute(['id' => $userId]);
+        $delete->execute(['id' => $cleanupUserId]);
     }
     unlink($path);
     unlink($directory . '/' . $invalidName);

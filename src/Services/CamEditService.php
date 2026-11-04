@@ -87,12 +87,16 @@ final class CamEditService
         }
 
         try {
-            $this->images->saveImageInfo($userId, $fileKey);
+            $imageId = $this->images->saveImageInfo($userId, $fileKey);
         } catch (Throwable $exception) {
             @unlink($path);
             throw $exception;
         }
 
-        return ['file_key' => $fileKey, 'image' => 'data:image/png;base64,' . base64_encode($contents)];
+        return [
+            'file_key' => $fileKey,
+            'image' => 'data:image/png;base64,' . base64_encode($contents),
+            'image_url' => '/image.php?id=' . $imageId,
+        ];
     }
 }

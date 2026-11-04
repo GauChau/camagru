@@ -11,27 +11,27 @@ final class ImageRepository
     {
     }
 
-	public function saveImageInfo(int $user_id, string $filekey): void
+	public function saveImageInfo(int $user_id, string $filekey): int
 	{
 		$query = $this->database->prepare(
-			'INSERT INTO images(user_id, file_key) VALUES(:user_id, :file_key)'
+			'INSERT INTO images(user_id, file_key) VALUES(:user_id, :file_key) RETURNING id'
 		);
 		$query->execute([
 			'user_id'=> $user_id,
 			'file_key'=> $filekey,
 		]);
+		return (int) $query->fetchColumn();
 	}
 
-    public function getUserImageListByDate(int $user_id): ?array
+    public function getUserImageListByDate(int $user_id): array
     {
         $query = $this->database->prepare(
-            'SELECT file_key FROM images WHERE user_id = :user_id ORDER BY created_at DESC, id DESC'
+            'SELECT id, file_key FROM images WHERE user_id = :user_id ORDER BY created_at DESC, id DESC'
         );
         $query->execute([
             'user_id' => $user_id
         ]);
         
-        // return $query->fetchAll(\PDO::FETCH_COLUMN);
         return $query->fetchAll();
     }
 

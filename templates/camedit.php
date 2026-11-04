@@ -40,7 +40,19 @@ require __DIR__ . '/partials/header.php';
         </section>
         <aside class="photos-panel" aria-labelledby="photos-title">
             <h2 id="photos-title">Mes créations</h2>
-            <p>Aucune création pour le moment.</p>
+            <?php if ($photosError !== null): ?>
+                <p id="photos-error" role="alert"><?= htmlspecialchars($photosError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
+            <?php endif; ?>
+            <p id="photos-empty"<?= $previousImages !== [] || $photosError !== null ? ' hidden' : '' ?>>Aucune création pour le moment.</p>
+            <ul id="photos-list" class="photos-list"<?= $previousImages === [] ? ' hidden' : '' ?>>
+                <?php foreach ($previousImages as $previousImage): ?>
+                    <li>
+                        <a class="photo-thumbnail" href="/image.php?id=<?= (int) $previousImage['id'] ?>">
+                            <img src="/image.php?id=<?= (int) $previousImage['id'] ?>" alt="Voir le montage n° <?= (int) $previousImage['id'] ?> en grand" loading="lazy">
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
         </aside>
     </div>
 </main>

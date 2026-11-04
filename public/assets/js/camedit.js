@@ -6,6 +6,8 @@ const captureButton = document.querySelector('#snap');
 const overlayPicker = document.querySelector('.overlay-picker');
 const overlayPreview = document.querySelector('#overlay-preview');
 const overlayImage = overlayPreview.querySelector('image');
+const photosList = document.querySelector('#photos-list');
+const photosEmpty = document.querySelector('#photos-empty');
 let cameraStream = null;
 let requestId = 0;
 let cameraReady = false;
@@ -142,6 +144,20 @@ captureButton.addEventListener('click', async () => {
         if (!response.ok) {
             throw new Error(result.error || 'Impossible d’enregistrer la capture.');
         }
+
+        const thumbnail = document.createElement('img');
+        thumbnail.src = result.image_url;
+        thumbnail.alt = 'Voir le montage que tu viens de créer en grand';
+        thumbnail.loading = 'lazy';
+        const link = document.createElement('a');
+        link.className = 'photo-thumbnail';
+        link.href = result.image_url;
+        link.append(thumbnail);
+        const item = document.createElement('li');
+        item.append(link);
+        photosList.prepend(item);
+        photosList.hidden = false;
+        photosEmpty.hidden = true;
 
         cameraStatus.textContent = 'Montage enregistré. Tu peux réactiver la webcam.';
     } catch (error) {

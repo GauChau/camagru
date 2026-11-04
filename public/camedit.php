@@ -20,6 +20,11 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_SESSION['user_id'])) {
+    header('Location: /login.php', true, 303);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
 
@@ -75,6 +80,16 @@ try {
     http_response_code(503);
     $overlayNames = [];
     $overlayError = 'Les calques sont momentanément indisponibles. Réessaie plus tard.';
+}
+
+$previousImages = [];
+$photosError = null;
+try {
+    $previousImages = (new ImageRepository(Database::connect()))->getUserImageListByDate((int) $_SESSION['user_id']);
+} catch (Throwable $exception) {
+    http_response_code(503);
+    $photosError = 'Tes créations sont momentanément indisponibles. Réessaie plus tard.';
+    error_log('Échec de l’historique des montages : ' . get_class($exception) . '.');
 }
 
 require dirname(__DIR__) . '/templates/camedit.php';
