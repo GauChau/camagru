@@ -6,7 +6,8 @@
 - Use one selected overlay per capture.
 - Fix its position and resize it to fill the entire captured image.
 - Compose the saved image on the server.
-- Show the server-composed montage in the preview after a successful save.
+- Show the selected overlay above the webcam frame whether the camera is active or stopped.
+- After capture, keep the raw capture under that overlay to display the montage without applying the overlay twice.
 - Enable capture only when both the webcam and an overlay are ready.
 
 ## Delivery

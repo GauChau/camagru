@@ -11,6 +11,9 @@ require __DIR__ . '/partials/header.php';
             <div class="camera-frame">
                 <video id="camera" autoplay muted playsinline aria-label="Webcam en direct"></video>
                 <img id="capture-preview" alt="Dernière capture de la webcam" hidden>
+                <svg id="overlay-preview" viewBox="0 0 1 1" preserveAspectRatio="xMidYMid slice" aria-hidden="true" hidden>
+                    <image width="100%" height="100%" preserveAspectRatio="none"></image>
+                </svg>
             </div>
             <button id="start" class="button button-solid" type="button">Activer la webcam</button>
             <button id="snap" class="button button-solid" type="button" disabled

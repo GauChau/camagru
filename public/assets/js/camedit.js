@@ -4,6 +4,8 @@ const startButton = document.querySelector('#start');
 const cameraStatus = document.querySelector('#camera-status');
 const captureButton = document.querySelector('#snap');
 const overlayPicker = document.querySelector('.overlay-picker');
+const overlayPreview = document.querySelector('#overlay-preview');
+const overlayImage = overlayPreview.querySelector('image');
 let cameraStream = null;
 let requestId = 0;
 let cameraReady = false;
@@ -14,7 +16,19 @@ function updateCaptureButton() {
         || !document.querySelector('input[name="overlay"]:checked');
 }
 
-overlayPicker.addEventListener('change', updateCaptureButton);
+function updateOverlayPreview() {
+    const selectedOverlay = document.querySelector('input[name="overlay"]:checked');
+    overlayPreview.toggleAttribute('hidden', !selectedOverlay);
+    if (selectedOverlay) {
+        overlayImage.setAttribute('href', `/overlay.php?name=${encodeURIComponent(selectedOverlay.value)}`);
+    } else {
+        overlayImage.removeAttribute('href');
+    }
+    updateCaptureButton();
+}
+
+overlayPicker.addEventListener('change', updateOverlayPreview);
+updateOverlayPreview();
 
 function stopCamera() {
     requestId += 1;
@@ -79,6 +93,9 @@ startButton.addEventListener('click', async () => {
         await video.play();
 
         if (currentRequest !== requestId) return;
+        if (video.videoWidth && video.videoHeight) {
+            overlayPreview.setAttribute('viewBox', `0 0 ${video.videoWidth} ${video.videoHeight}`);
+        }
         capturePreview.hidden = true;
         video.hidden = false;
         startButton.textContent = 'Arrêter la webcam';
@@ -126,7 +143,6 @@ captureButton.addEventListener('click', async () => {
             throw new Error(result.error || 'Impossible d’enregistrer la capture.');
         }
 
-        capturePreview.src = result.image;
         cameraStatus.textContent = 'Montage enregistré. Tu peux réactiver la webcam.';
     } catch (error) {
         cameraStatus.textContent = error.message || 'Impossible d’envoyer la capture.';
