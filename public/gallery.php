@@ -20,6 +20,8 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
 }
 
 $page = filter_var($_GET['page'] ?? '1', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
+$commentsFor = filter_var($_GET['comments_for'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 2147483647]]) ?: null;
+$commentPage = filter_var($_GET['comments_page'] ?? '1', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
 $images = [];
 $total = 0;
 $pageCount = 1;
@@ -62,7 +64,7 @@ try {
                     $error = 'Ce montage n’est plus disponible.';
                 } else {
                     $_SESSION['gallery_notice'] = $action === 'comment' ? 'Ton commentaire a été publié.' : 'Ton choix a été enregistré.';
-                    header('Location: /gallery.php?page=' . $page . '#image-' . $imageId, true, 303);
+                    header('Location: /gallery.php?page=' . $page . '&comments_for=' . $imageId . '#image-' . $imageId, true, 303);
                     exit;
                 }
             } catch (InvalidArgumentException $exception) {
@@ -74,7 +76,7 @@ try {
     $total = $gallery->countImages();
     $pageCount = max(1, (int) ceil($total / 6));
     $page = min($page, $pageCount);
-    $images = $gallery->getPage($page, 6, $userId);
+    $images = $gallery->getPage($page, 6, $userId, $commentsFor, $commentPage);
 } catch (Throwable $exception) {
     http_response_code(503);
     $error = 'La galerie est momentanément indisponible. Réessaie plus tard.';

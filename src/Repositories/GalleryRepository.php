@@ -16,11 +16,12 @@ final class GalleryRepository
         return (int) $this->database->query('SELECT count(*) FROM images')->fetchColumn();
     }
 
-    public function getPage(int $page, int $pageSize, ?int $viewerId): array
+    public function getPage(int $page, int $pageSize, ?int $viewerId, ?int $commentsFor = null, int $commentPage = 1): array
     {
         $query = $this->database->prepare(
             'SELECT i.id, i.created_at, u.login,
                 (SELECT count(*) FROM image_likes l WHERE l.image_id = i.id) AS like_count,
+                (SELECT count(*) FROM image_comments c WHERE c.image_id = i.id) AS comment_count,
                 EXISTS (SELECT 1 FROM image_likes l WHERE l.image_id = i.id AND l.user_id = :viewer) AS liked
             FROM images i JOIN users u ON u.id = i.user_id
             ORDER BY i.created_at DESC, i.id DESC LIMIT :limit OFFSET :offset'
@@ -31,12 +32,16 @@ final class GalleryRepository
         $query->execute();
         $images = $query->fetchAll();
         foreach ($images as &$image) {
+            $image['comment_pages'] = max(1, (int) ceil($image['comment_count'] / 10));
+            $image['comment_page'] = (int) $image['id'] === $commentsFor ? min($commentPage, $image['comment_pages']) : 1;
             $comments = $this->database->prepare(
                 'SELECT c.body, c.created_at, u.login FROM image_comments c
                 JOIN users u ON u.id = c.user_id WHERE c.image_id = :image
-                ORDER BY c.created_at, c.id'
+                ORDER BY c.created_at DESC, c.id DESC LIMIT 10 OFFSET :offset'
             );
-            $comments->execute(['image' => $image['id']]);
+            $comments->bindValue('image', (int) $image['id'], PDO::PARAM_INT);
+            $comments->bindValue('offset', ($image['comment_page'] - 1) * 10, PDO::PARAM_INT);
+            $comments->execute();
             $image['comments'] = $comments->fetchAll();
         }
         return $images;

@@ -33,6 +33,8 @@
 .gallery-comment-list { max-height: 280px; margin: 16px 0; padding: 0; overflow-y: auto; list-style: none; }
 .gallery-comment-list li { padding: 12px 0; overflow-wrap: anywhere; }
 .gallery-comment-list p { margin: 6px 0 0; white-space: pre-wrap; line-height: 1.5; }
+.gallery-comment-pagination { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px; }
+.gallery-comment-pagination a { display: inline-flex; align-items: center; min-height: 44px; color: #111; text-underline-offset: 3px; }
 .gallery-comment-form { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 20px; }
 .gallery-comment-form textarea { width: 100%; min-height: 88px; padding: 12px; border: 1px solid #aaa; border-radius: 10px; resize: vertical; font: inherit; }
 .gallery-comment-form .button { min-height: 44px; min-width: 0; padding: 10px 22px; font-size: 13px; }

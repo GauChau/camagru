@@ -140,6 +140,7 @@ docker compose exec -T web php tests/activation.php
 plus ancien, à raison de six par page. Les visiteurs peuvent consulter les
 images et commentaires ; les utilisateurs connectés peuvent aimer, retirer leur
 like et publier des commentaires (2 000 caractères maximum).
+Les commentaires sont affichés par groupes de dix, du plus récent au plus ancien.
 
 Chaque commentaire déclenche un email à l’auteur du montage. Cette notification
 est active par défaut et peut être désactivée dans `/settings.php`. En local,

@@ -51,8 +51,8 @@ require __DIR__ . '/partials/header.php';
                                     <span>♡ <?= $image['like_count'] ?> j’aime</span>
                                 <?php endif; ?>
                             </div>
-                            <details class="gallery-comments"<?= $commentImageId === (int) $image['id'] ? ' open' : '' ?>>
-                                <summary>Commentaires (<?= count($image['comments']) ?>)</summary>
+                            <details class="gallery-comments"<?= $commentImageId === (int) $image['id'] || $commentsFor === (int) $image['id'] ? ' open' : '' ?>>
+                                <summary>Commentaires (<?= $image['comment_count'] ?>)</summary>
                                 <?php if ($image['comments'] === []): ?>
                                     <p class="gallery-help">Aucun commentaire pour le moment.</p>
                                 <?php else: ?>
@@ -61,6 +61,17 @@ require __DIR__ . '/partials/header.php';
                                             <li><strong><?= $escape($comment['login']) ?></strong><p><?= $escape($comment['body']) ?></p></li>
                                         <?php endforeach; ?>
                                     </ol>
+                                    <?php if ($image['comment_pages'] > 1): ?>
+                                        <nav class="gallery-comment-pagination" aria-label="Commentaires du montage de <?= $escape($image['login']) ?>">
+                                            <?php if ($image['comment_page'] > 1): ?>
+                                                <a href="/gallery.php?page=<?= $page ?>&amp;comments_for=<?= $image['id'] ?>&amp;comments_page=<?= $image['comment_page'] - 1 ?>#image-<?= $image['id'] ?>">Plus récents</a>
+                                            <?php endif; ?>
+                                            <span>Page <?= $image['comment_page'] ?> sur <?= $image['comment_pages'] ?></span>
+                                            <?php if ($image['comment_page'] < $image['comment_pages']): ?>
+                                                <a href="/gallery.php?page=<?= $page ?>&amp;comments_for=<?= $image['id'] ?>&amp;comments_page=<?= $image['comment_page'] + 1 ?>#image-<?= $image['id'] ?>">Plus anciens</a>
+                                            <?php endif; ?>
+                                        </nav>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 <?php if ($isLoggedIn): ?>
                                     <form class="gallery-comment-form" method="post" action="/gallery.php?page=<?= $page ?>#image-<?= $image['id'] ?>">

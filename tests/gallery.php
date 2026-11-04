@@ -159,6 +159,18 @@ try {
     $fields['csrf_token'] = $token($page, '/gallery.php');
     $check($request('POST', '/gallery.php', array_replace($fields, ['action' => 'comment', 'comment' => str_repeat('é', 2000)]))['status'] === 303, 'La limite de 2 000 caractères Unicode est acceptée.');
     $check(count($messages()) === 2, 'Les emails reprennent après réactivation, y compris pour un commentaire de l’auteur.');
+    $fixtureComment = $database->prepare('INSERT INTO image_comments (image_id, user_id, body) VALUES (:image, :user, :body)');
+    for ($i = 1; $i <= 12; $i++) {
+        $fixtureComment->execute(['image' => $target, 'user' => $users['viewer']['id'], 'body' => 'pagination_comment_' . $i]);
+    }
+    $page = $request('GET', '/gallery.php');
+    $check(str_contains($page['body'], 'Commentaires (15)') && substr_count($page['body'], '<li><strong>') === 10, 'Le compteur reste complet avec dix commentaires au maximum par montage.');
+    $check(str_contains($page['body'], 'pagination_comment_12') && !str_contains($page['body'], 'pagination_comment_1</p>'), 'Les commentaires les plus récents sont affichés en premier.');
+    $page = $request('GET', '/gallery.php?comments_for=' . $target . '&comments_page=2');
+    $check(substr_count($page['body'], '<li><strong>') === 5 && str_contains($page['body'], 'pagination_comment_1</p>'), 'La deuxième page donne accès aux commentaires plus anciens.');
+    $check(str_contains($page['body'], 'class="gallery-comments" open'), 'La navigation des commentaires conserve leur section ouverte.');
+    $page = $request('GET', '/gallery.php?comments_for=' . $target . '&comments_page=999999999');
+    $check(str_contains($page['body'], 'Page 2 sur 2'), 'Une page de commentaires hors limites est bornée.');
     echo $checks . " vérifications réussies (galerie publique, pagination, images, likes, commentaires, sécurité et emails).\n";
 } finally {
     $mailApi('search?query=' . rawurlencode('to:gallery_' . $suffix . '_owner@example.test'), 'DELETE');
