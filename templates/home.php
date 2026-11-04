@@ -11,6 +11,7 @@ require __DIR__ . '/partials/header.php';
                 <a class="button button-outline" href="/gallery.php">Gallery</a>
                 <a class="button button-solid" href="/profile.php">My profile</a>
             <?php else: ?>
+                <a class="button button-outline" href="/gallery.php">Gallery</a>
                 <a class="button button-outline" href="/login.php">Login</a>
                 <a class="button button-solid" href="/register.php">Register</a>
             <?php endif; ?>

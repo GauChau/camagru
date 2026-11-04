@@ -33,7 +33,7 @@ final class UserRepository
 
     public function findById(int $id): ?array
     {
-        $query = $this->database->prepare('SELECT id, login, email, password FROM users WHERE id = :id');
+        $query = $this->database->prepare('SELECT id, login, email, password, comment_notifications FROM users WHERE id = :id');
         $query->execute(['id' => $id]);
         $user = $query->fetch();
 
@@ -65,10 +65,12 @@ final class UserRepository
         string $login,
         string $email,
         ?string $passwordHash,
-        string $currentPasswordHash
+        string $currentPasswordHash,
+        bool $commentNotifications = true
     ): bool {
         $query = $this->database->prepare(
-            'UPDATE users SET login = :login, email = :email, password = COALESCE(:password, password)
+            'UPDATE users SET login = :login, email = :email, password = COALESCE(:password, password),
+                comment_notifications = :notifications
             WHERE id = :id AND password = :current_password'
         );
         $query->execute([
@@ -77,6 +79,7 @@ final class UserRepository
             'email' => $email,
             'password' => $passwordHash,
             'current_password' => $currentPasswordHash,
+            'notifications' => $commentNotifications ? 'true' : 'false',
         ]);
 
         return $query->rowCount() === 1;

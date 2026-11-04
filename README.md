@@ -134,6 +134,27 @@ sont annulées à la fin :
 docker compose exec -T web php tests/activation.php
 ```
 
+## Galerie publique
+
+`/gallery.php` affiche les montages de tous les utilisateurs, du plus récent au
+plus ancien, à raison de six par page. Les visiteurs peuvent consulter les
+images et commentaires ; les utilisateurs connectés peuvent aimer, retirer leur
+like et publier des commentaires (2 000 caractères maximum).
+
+Chaque commentaire déclenche un email à l’auteur du montage. Cette notification
+est active par défaut et peut être désactivée dans `/settings.php`. En local,
+les emails sont capturés par Mailpit.
+
+Sur une base déjà initialisée, appliquer la migration avant d’utiliser la galerie
+ou les paramètres du compte :
+
+```sh
+docker compose exec -T db sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < database/004_gallery.sql
+docker compose exec -T web php tests/gallery.php
+```
+
+Les tests HTTP créent puis suppriment leurs propres comptes, images et emails.
+
 ## Paramètres du compte
 
 Les utilisateurs connectés accèdent à `/settings.php` avec l’engrenage situé en

@@ -31,7 +31,7 @@ if ($isLoggedIn && !is_string($_SESSION['logout_csrf'] ?? null)) {
         <nav class="site-nav" aria-label="Accès au compte">
             <?php if ($isLoggedIn): ?>
                 <a class="button button-outline" href="/gallery.php">Gallery</a>
-                <a class="button button-solid" href="/profile.php">My profile</a>
+                <a class="button button-solid" href="/camedit.php">Booth</a>
                 <form method="post" action="/logout.php">
                     <input type="hidden" name="csrf_token"
                         value="<?= htmlspecialchars($_SESSION['logout_csrf'], ENT_QUOTES, 'UTF-8') ?>">
@@ -47,6 +47,7 @@ if ($isLoggedIn && !is_string($_SESSION['logout_csrf'] ?? null)) {
                     </svg>
                 </a>
             <?php else: ?>
+                <a class="button button-outline" href="/gallery.php">Gallery</a>
                 <a class="button button-outline" href="/login.php">Login</a>
                 <a class="button button-solid" href="/register.php">Register</a>
             <?php endif; ?>

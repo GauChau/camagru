@@ -6,7 +6,7 @@ CREATE TABLE users (
     login text NOT NULL,
     password text NOT NULL, -- Hash du mot de passe uniquement.
     email text NOT NULL,
-    activation boolean NOT NULL FALSE,
+    activation boolean NOT NULL DEFAULT FALSE,
     activation_token_hash TEXT,
     activation_token_expires_at TIMESTAMPTZ
 );

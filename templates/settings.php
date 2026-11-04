@@ -27,6 +27,10 @@ require __DIR__ . '/partials/header.php';
                     <label for="email">Email</label>
                     <input id="email" name="email" type="email" value="<?= $escape($values['email']) ?>" autocomplete="email" autocapitalize="none" spellcheck="false" required>
                 </div>
+                <label class="settings-notifications">
+                    <input type="checkbox" name="comment_notifications" value="1"<?= $values['comment_notifications'] ? ' checked' : '' ?>>
+                    <span>Notify me by email when someone comments on my images.</span>
+                </label>
                 <fieldset class="settings-password">
                     <legend>Change password</legend>
                     <p class="settings-help" id="password-help">Leave these fields blank to keep your current password. A new password must contain at least 10 characters and one number.</p>

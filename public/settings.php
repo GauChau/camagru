@@ -23,7 +23,7 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
 }
 
 $errors = [];
-$values = ['login' => '', 'email' => ''];
+$values = ['login' => '', 'email' => '', 'comment_notifications' => true];
 $success = ($_SESSION['settings_success'] ?? false) === true;
 unset($_SESSION['settings_success']);
 
@@ -43,12 +43,13 @@ try {
         header('Location: /login.php', true, 303);
         exit;
     }
-    $values = ['login' => $user['login'], 'email' => $user['email']];
+    $values = ['login' => $user['login'], 'email' => $user['email'], 'comment_notifications' => $user['comment_notifications']];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success = false;
         $values['login'] = is_string($_POST['login'] ?? null) ? trim($_POST['login']) : '';
         $values['email'] = is_string($_POST['email'] ?? null) ? strtolower(trim($_POST['email'])) : '';
+        $values['comment_notifications'] = ($_POST['comment_notifications'] ?? null) === '1';
 
         if (!is_string($_POST['csrf_token'] ?? null) || !hash_equals($csrfToken, $_POST['csrf_token'])) {
             http_response_code(403);
@@ -72,7 +73,8 @@ try {
                     $values['email'],
                     $passwords['current_password'],
                     $passwords['password'],
-                    $passwords['confirm_password']
+                    $passwords['confirm_password'],
+                    $values['comment_notifications']
                 );
             }
             if ($errors === []) {

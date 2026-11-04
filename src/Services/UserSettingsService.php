@@ -19,7 +19,8 @@ final class UserSettingsService
         string $email,
         string $currentPassword,
         string $password,
-        string $confirmation
+        string $confirmation,
+        bool $commentNotifications = true
     ): array {
         $login = trim($login);
         $email = strtolower(trim($email));
@@ -59,7 +60,7 @@ final class UserSettingsService
 
         $passwordHash = $password === '' ? null : password_hash($password, PASSWORD_ARGON2ID);
         try {
-            $updated = $this->users->updateSettings($userId, $login, $email, $passwordHash, $user['password']);
+            $updated = $this->users->updateSettings($userId, $login, $email, $passwordHash, $user['password'], $commentNotifications);
         } catch (PDOException $exception) {
             if ($exception->getCode() !== '23505') {
                 throw $exception;
