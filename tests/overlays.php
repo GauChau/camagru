@@ -108,6 +108,8 @@ try {
     $check($request('POST', '/camedit.php', $validFields)['status'] === 401, 'Les captures doivent rester réservées aux utilisateurs connectés.');
     $cookie = $authenticatedCookie;
     $check($request('POST', '/camedit.php', array_replace($validFields, ['image' => 'data:image/png;base64,bm90IGFuIGltYWdl']))['status'] === 422, 'La capture doit toujours être une véritable image PNG.');
+    $truncated = 'data:image/png;base64,' . base64_encode(substr(base64_decode(substr($image, strlen('data:image/png;base64,')), true), 0, 33));
+    $check($request('POST', '/camedit.php', array_replace($validFields, ['image' => $truncated]))['status'] === 422, 'Un PNG tronqué après son en-tête doit être refusé proprement.');
     $saved = $request('POST', '/camedit.php', $fields + ['overlay' => $name]);
     $result = json_decode($saved['body'], true, flags: JSON_THROW_ON_ERROR);
     $check($saved['status'] === 201 && isset($result['file_key'], $result['image']), 'Le serveur doit enregistrer le montage et retourner son aperçu.');

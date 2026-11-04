@@ -15,6 +15,9 @@ final class OverlayCatalog
         if (!is_dir(self::DIRECTORY)) {
             return [];
         }
+        if (!is_readable(self::DIRECTORY)) {
+            throw new RuntimeException('Impossible de lire le stock de calques.');
+        }
         $names = scandir(self::DIRECTORY);
         if ($names === false) {
             throw new RuntimeException('Impossible de lire le stock de calques.');
@@ -49,7 +52,16 @@ final class OverlayCatalog
         if (!is_readable($path)) {
             throw new RuntimeException('Un calque du stock est illisible.');
         }
-        $info = getimagesize($path);
+        set_error_handler(static function (): never {
+            throw new InvalidArgumentException('Le calque est invalide.');
+        }, E_WARNING | E_NOTICE);
+        try {
+            $info = getimagesize($path);
+        } catch (InvalidArgumentException $exception) {
+            return false;
+        } finally {
+            restore_error_handler();
+        }
 
         return $info !== false && $info[2] === IMAGETYPE_PNG
             && $info[0] > 0 && $info[1] > 0 && $info[0] <= 4096 && $info[1] <= 4096

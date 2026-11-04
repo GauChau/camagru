@@ -33,21 +33,28 @@ final class CamEditService
         }
 
         $overlayContents = $this->overlays->readImage($overlayName);
-        $overlayInfo = getimagesizefromstring($overlayContents);
-        if ($overlayInfo === false) {
-            throw new InvalidArgumentException('Le calque est invalide.');
-        }
-        // GD garde les deux images décodées et un tampon supplémentaire lors de l’encodage PNG.
-        $estimatedMemory = $info[0] * $info[1] * 8 + $overlayInfo[0] * $overlayInfo[1] * 4 + 32 * 1024 * 1024;
-        $memoryLimit = ini_parse_quantity((string) ini_get('memory_limit'));
-        if ($memoryLimit > 0 && $estimatedMemory > $memoryLimit - memory_get_usage(true)) {
-            throw new InvalidArgumentException('La capture et le calque sont trop grands pour être combinés. Utilise un calque plus petit ou réduis la résolution de la webcam.');
-        }
-        $overlay = imagecreatefromstring($overlayContents);
-        unset($overlayContents);
-        $capture = imagecreatefromstring($contents);
-        if ($overlay === false || $capture === false) {
+        set_error_handler(static function (): never {
             throw new InvalidArgumentException('La capture ou le calque est invalide.');
+        }, E_WARNING | E_NOTICE);
+        try {
+            $overlayInfo = getimagesizefromstring($overlayContents);
+            if ($overlayInfo === false) {
+                throw new InvalidArgumentException('Le calque est invalide.');
+            }
+            // GD garde les deux images décodées et un tampon supplémentaire lors de l’encodage PNG.
+            $estimatedMemory = $info[0] * $info[1] * 8 + $overlayInfo[0] * $overlayInfo[1] * 4 + 32 * 1024 * 1024;
+            $memoryLimit = ini_parse_quantity((string) ini_get('memory_limit'));
+            if ($memoryLimit > 0 && $estimatedMemory > $memoryLimit - memory_get_usage(true)) {
+                throw new InvalidArgumentException('La capture et le calque sont trop grands pour être combinés. Utilise un calque plus petit ou réduis la résolution de la webcam.');
+            }
+            $overlay = imagecreatefromstring($overlayContents);
+            unset($overlayContents);
+            $capture = imagecreatefromstring($contents);
+            if ($overlay === false || $capture === false) {
+                throw new InvalidArgumentException('La capture ou le calque est invalide.');
+            }
+        } finally {
+            restore_error_handler();
         }
         imagepalettetotruecolor($capture);
         imagealphablending($capture, true);
