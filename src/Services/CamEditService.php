@@ -75,6 +75,9 @@ final class CamEditService
         } finally {
             restore_error_handler();
         }
+        if ($info[2] === IMAGETYPE_JPEG) {
+            $capture = $this->orientJpeg($capture, $contents);
+        }
         imagepalettetotruecolor($capture);
         imagealphablending($capture, true);
         imagesavealpha($capture, true);
@@ -117,5 +120,40 @@ final class CamEditService
             'image' => 'data:image/png;base64,' . base64_encode($contents),
             'image_url' => '/image.php?id=' . $imageId,
         ];
+    }
+
+    private function orientJpeg(\GdImage $image, string $contents): \GdImage
+    {
+        $stream = fopen('php://temp', 'w+b');
+        if ($stream === false) {
+            throw new RuntimeException('Impossible de lire l’orientation du JPEG.');
+        }
+        try {
+            fwrite($stream, $contents);
+            rewind($stream);
+            // Les JPEG sans métadonnées sont valides ; les tags inconnus sont ignorés.
+            $metadata = @exif_read_data($stream);
+        } finally {
+            fclose($stream);
+        }
+        $orientation = (int) ($metadata['Orientation'] ?? 1);
+        if (in_array($orientation, [2, 5, 7], true)) {
+            imageflip($image, IMG_FLIP_HORIZONTAL);
+        } elseif ($orientation === 4) {
+            imageflip($image, IMG_FLIP_VERTICAL);
+        }
+        $angle = match ($orientation) {
+            3 => 180,
+            5, 8 => 90,
+            6, 7 => 270,
+            default => 0,
+        };
+        if ($angle !== 0) {
+            $image = imagerotate($image, $angle, 0);
+            if ($image === false) {
+                throw new RuntimeException('Impossible d’orienter le JPEG.');
+            }
+        }
+        return $image;
     }
 }

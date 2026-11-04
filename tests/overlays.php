@@ -167,6 +167,27 @@ try {
         && (imagecolorat($decodedUpload, 0, 0) & 0xffffff) === 0xff0000, 'Le fichier importé est décodé et le calque est ajouté côté serveur dans le PNG enregistré.');
     $history = $request('GET', '/camedit.php');
     $check(str_contains($history['body'], 'class="photo-thumbnail" href="' . $uploadResult['image_url'] . '"'), 'Le montage importé est conservé dans les créations personnelles.');
+    $orientationImage = imagecreatetruecolor(80, 40);
+    imagefilledrectangle($orientationImage, 0, 0, 39, 19, 0xff0000);
+    imagefilledrectangle($orientationImage, 40, 0, 79, 19, 0x00ff00);
+    imagefilledrectangle($orientationImage, 0, 20, 39, 39, 0x0000ff);
+    imagefilledrectangle($orientationImage, 40, 20, 79, 39, 0xffff00);
+    ob_start();
+    imagejpeg($orientationImage, null, 100);
+    $jpegBytes = ob_get_clean();
+    foreach ([1 => 0x00ff00, 2 => 0xff0000, 3 => 0x0000ff, 4 => 0xffff00, 5 => 0x0000ff, 6 => 0xff0000, 7 => 0x00ff00, 8 => 0xffff00] as $orientation => $expectedColor) {
+        $exif = "Exif\0\0II*\0" . pack('Vv', 8, 1) . pack('vvVv', 0x112, 3, 1, $orientation) . "\0\0" . pack('V', 0);
+        file_put_contents($jpegPath, substr($jpegBytes, 0, 2) . "\xff\xe1" . pack('n', strlen($exif) + 2) . $exif . substr($jpegBytes, 2));
+        $uploaded = $request('POST', '/camedit.php', array_replace($uploadFields, ['photo' => new CURLFile($jpegPath, 'image/jpeg', 'phone.jpg')]));
+        $orientedResult = json_decode($uploaded['body'], true, flags: JSON_THROW_ON_ERROR);
+        $check($uploaded['status'] === 201, 'Un JPEG avec orientation EXIF peut être importé.');
+        $oriented = imagecreatefromstring(base64_decode(substr($orientedResult['image'], strlen('data:image/png;base64,')), true));
+        $check(imagesx($oriented) === ($orientation >= 5 ? 40 : 80) && imagesy($oriented) === ($orientation >= 5 ? 80 : 40), 'L’orientation EXIF ' . $orientation . ' détermine les dimensions du montage.');
+        $color = imagecolorat($oriented, imagesx($oriented) - 1, 0);
+        foreach ([0, 8, 16] as $shift) {
+            $check(abs((($color >> $shift) & 255) - (($expectedColor >> $shift) & 255)) <= 10, 'La rotation ou réflexion EXIF ' . $orientation . ' doit précéder l’ajout du calque.');
+        }
+    }
     $badPath = tempnam(sys_get_temp_dir(), 'camagru_bad_');
     $uploadPaths[] = $badPath;
     foreach (['<?php echo "bad";', '<svg xmlns="http://www.w3.org/2000/svg"></svg>', substr(file_get_contents($path), 0, 33), str_repeat('x', 5 * 1024 * 1024 + 1)] as $invalidFile) {

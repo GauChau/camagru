@@ -9,6 +9,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
+# Orientation des photos JPEG importées depuis un téléphone.
+RUN docker-php-ext-install exif
+
 # Transport local de mail() vers Mailpit.
 COPY --from=mailpit /mailpit /usr/local/bin/mailpit
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf

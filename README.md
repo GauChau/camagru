@@ -130,7 +130,9 @@ Pour créer un montage sans webcam, utiliser « Ou importer une image » puis
 choisir un calque et cliquer sur « Enregistrer le montage ». Les PNG et JPEG sont
 acceptés jusqu’à 5 Mo et 4096 × 4096 pixels. L’aperçu conserve l’image entière ;
 le serveur valide et décode le fichier, applique le calque et enregistre le
-résultat en PNG. Le montage apparaît aussitôt dans « Mes créations » et dans la
+résultat en PNG. L’orientation EXIF des JPEG de téléphone est appliquée avant le
+calque. Après mise à jour du Dockerfile, relancer `make` pour installer l’extension
+PHP EXIF. Le montage apparaît aussitôt dans « Mes créations » et dans la
 galerie publique. Il est possible de revenir à la webcam avec son bouton.
 
 ## Activation du compte
