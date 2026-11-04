@@ -1,6 +1,8 @@
 const video = document.querySelector('#camera');
+const capturePreview = document.querySelector('#capture-preview');
 const startButton = document.querySelector('#start');
 const cameraStatus = document.querySelector('#camera-status');
+const captureButton = document.querySelector('#snap');
 let cameraStream = null;
 let requestId = 0;
 
@@ -9,9 +11,25 @@ function stopCamera() {
     cameraStream?.getTracks().forEach((track) => track.stop());
     cameraStream = null;
     video.srcObject = null;
+    captureButton.disabled = true;
     startButton.disabled = false;
     startButton.textContent = 'Activer la webcam';
     cameraStatus.textContent = 'Webcam arrêtée.';
+}
+
+function captureImage() {
+    if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+        throw new Error('La caméra n’est pas encore prête.');
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    return canvas.toDataURL('image/png');
 }
 
 startButton.addEventListener('click', async () => {
@@ -50,7 +68,10 @@ startButton.addEventListener('click', async () => {
         await video.play();
 
         if (currentRequest !== requestId) return;
+        capturePreview.hidden = true;
+        video.hidden = false;
         startButton.textContent = 'Arrêter la webcam';
+        captureButton.disabled = false;
         cameraStatus.textContent = 'Webcam en direct.';
     } catch (error) {
         if (currentRequest !== requestId) return;
@@ -60,6 +81,41 @@ startButton.addEventListener('click', async () => {
             : 'Caméra inaccessible. Vérifie qu’elle est branchée et disponible puis réessaie.';
     } finally {
         if (currentRequest === requestId) startButton.disabled = false;
+    }
+});
+
+captureButton.addEventListener('click', async () => {
+    captureButton.disabled = true;
+
+    try {
+        const image = captureImage();
+        capturePreview.src = image;
+        capturePreview.hidden = false;
+        video.hidden = true;
+        stopCamera();
+        startButton.disabled = true;
+        cameraStatus.textContent = 'Envoi de la capture…';
+
+        const response = await fetch('/camedit.php', {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: new URLSearchParams({
+                image,
+                csrf_token: captureButton.dataset.csrfToken
+            })
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Impossible d’enregistrer la capture.');
+        }
+
+        cameraStatus.textContent = 'Capture enregistrée. Tu peux réactiver la webcam.';
+    } catch (error) {
+        cameraStatus.textContent = error.message || 'Impossible d’envoyer la capture.';
+    } finally {
+        startButton.disabled = false;
+        captureButton.disabled = !cameraStream;
     }
 });
 

@@ -17,12 +17,17 @@
     margin-bottom: 24px;
 }
 
-.camera-frame video {
+.camera-frame video,
+.camera-frame img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center;
+}
+
+.camera-frame [hidden] {
+    display: none;
 }
 
 .camera-panel .button:disabled {
@@ -34,4 +39,23 @@
     margin: 16px 0 0;
     color: #666;
     line-height: 1.5;
+}
+
+.editor-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 560px) minmax(0, 240px);
+    align-items: start;
+    gap: 32px;
+    width: min(100%, 832px);
+}
+
+.photos-panel {
+    min-width: 0;
+}
+
+@media (max-width: 760px) {
+    .editor-layout {
+        grid-template-columns: minmax(0, 560px);
+        justify-content: center;
+    }
 }

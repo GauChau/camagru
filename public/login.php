@@ -45,7 +45,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST')
                 $_SESSION['login_csrf'] = bin2hex(random_bytes(32));
                 $_SESSION['user_id'] = $users->getUserId($login);
                 // Recharger la page de succès ne doit pas renvoyer une inscription.
-                header('Location: /profile.php', true, 303);
+                header('Location: /camedit.php', true, 303);
                 exit;
             }
             error_log(print_r($errors, true));
