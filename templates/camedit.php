@@ -16,6 +16,22 @@ require __DIR__ . '/partials/header.php';
             <button id="snap" class="button button-solid" type="button" disabled
                 data-csrf-token="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">Capturer</button>
             <p id="camera-status" role="status">Active la webcam pour afficher l’aperçu en direct.</p>
+            <fieldset class="overlay-picker">
+                <legend>Choisis un calque</legend>
+                <?php if ($overlayNames === []): ?>
+                    <p>Aucun calque disponible pour le moment.</p>
+                <?php else: ?>
+                    <div class="overlay-list">
+                        <?php foreach ($overlayNames as $overlayName): ?>
+                            <label class="overlay-option">
+                                <input type="radio" name="overlay" value="<?= htmlspecialchars($overlayName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+                                <img src="/overlay.php?name=<?= rawurlencode($overlayName) ?>" alt="" loading="lazy">
+                                <span><?= htmlspecialchars(pathinfo($overlayName, PATHINFO_FILENAME), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </fieldset>
         </section>
         <aside class="photos-panel" aria-labelledby="photos-title">
             <h2 id="photos-title">Mes créations</h2>

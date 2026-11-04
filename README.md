@@ -99,6 +99,25 @@ Ils vérifient le parcours HTTP, les champs invalides, les doublons, le hash et
 les contraintes PostgreSQL. Ils créent des comptes portant un préfixe aléatoire
 et les suppriment à la fin.
 
+## Calques de la webcam
+
+Les PNG transparents du stock sont placés dans `storage/calcs/`. Créer ce dossier
+s’il n’existe pas, puis y ajouter les images : elles apparaissent automatiquement
+dans l’éditeur, sans reconstruction. Chaque fichier doit être un PNG de 5 Mo et
+4096 × 4096 pixels maximum. Le stock reste local et est ignoré par Git.
+
+Choisir un calque puis activer la webcam, ou l’inverse. Le bouton de capture
+reste désactivé tant que les deux ne sont pas prêts. Le serveur redimensionne le
+calque à la taille entière de la capture, conserve sa transparence et enregistre
+le montage. L’aperçu affiche ensuite ce montage.
+
+Les tests HTTP créent leurs propres PNG, un compte et des captures temporaires,
+puis les suppriment :
+
+```sh
+docker compose exec -T web php tests/overlays.php
+```
+
 ## Activation du compte
 
 Le module d’activation gère la création du compte inactif, le lien envoyé par

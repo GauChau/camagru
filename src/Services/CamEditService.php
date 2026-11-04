@@ -10,11 +10,11 @@ use Throwable;
 
 final class CamEditService
 {
-    public function __construct(private ImageRepository $images)
+    public function __construct(private ImageRepository $images, private OverlayCatalog $overlays)
     {
     }
 
-    public function uploadImage(int $userId, string $image): string
+    public function uploadImage(int $userId, string $image, string $overlayName): array
     {
         $prefix = 'data:image/png;base64,';
         if (!str_starts_with($image, $prefix) || strlen($image) > 7 * 1024 * 1024) {
@@ -31,6 +31,29 @@ final class CamEditService
             || $info[0] < 1 || $info[1] < 1 || $info[0] > 4096 || $info[1] > 4096) {
             throw new InvalidArgumentException('La capture doit être un PNG de 4096 × 4096 pixels maximum.');
         }
+
+        $overlay = @imagecreatefromstring($this->overlays->readImage($overlayName));
+        $capture = @imagecreatefromstring($contents);
+        if ($overlay === false || $capture === false) {
+            throw new InvalidArgumentException('La capture ou le calque est invalide.');
+        }
+        imagepalettetotruecolor($capture);
+        imagealphablending($capture, true);
+        imagesavealpha($capture, true);
+        if (!imagecopyresampled($capture, $overlay, 0, 0, 0, 0,
+            imagesx($capture), imagesy($capture), imagesx($overlay), imagesy($overlay))) {
+            throw new RuntimeException('Impossible de composer le montage.');
+        }
+        ob_start();
+        try {
+            if (!imagepng($capture)) {
+                throw new RuntimeException('Impossible d’encoder le montage.');
+            }
+            $contents = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+        unset($capture, $overlay);
 
         $directory = dirname(__DIR__, 2) . '/storage/cam_images';
         if (!is_dir($directory) && !@mkdir($directory, 0770, true) && !is_dir($directory)) {
@@ -51,6 +74,6 @@ final class CamEditService
             throw $exception;
         }
 
-        return $fileKey;
+        return ['file_key' => $fileKey, 'image' => 'data:image/png;base64,' . base64_encode($contents)];
     }
 }

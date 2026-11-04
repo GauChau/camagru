@@ -3,16 +3,27 @@ const capturePreview = document.querySelector('#capture-preview');
 const startButton = document.querySelector('#start');
 const cameraStatus = document.querySelector('#camera-status');
 const captureButton = document.querySelector('#snap');
+const overlayPicker = document.querySelector('.overlay-picker');
 let cameraStream = null;
 let requestId = 0;
+let cameraReady = false;
+let capturePending = false;
+
+function updateCaptureButton() {
+    captureButton.disabled = !cameraReady || capturePending
+        || !document.querySelector('input[name="overlay"]:checked');
+}
+
+overlayPicker.addEventListener('change', updateCaptureButton);
 
 function stopCamera() {
     requestId += 1;
     cameraStream?.getTracks().forEach((track) => track.stop());
     cameraStream = null;
+    cameraReady = false;
     video.srcObject = null;
     captureButton.disabled = true;
-    startButton.disabled = false;
+    startButton.disabled = capturePending;
     startButton.textContent = 'Activer la webcam';
     cameraStatus.textContent = 'Webcam arrêtée.';
 }
@@ -71,7 +82,8 @@ startButton.addEventListener('click', async () => {
         capturePreview.hidden = true;
         video.hidden = false;
         startButton.textContent = 'Arrêter la webcam';
-        captureButton.disabled = false;
+        cameraReady = true;
+        updateCaptureButton();
         cameraStatus.textContent = 'Webcam en direct.';
     } catch (error) {
         if (currentRequest !== requestId) return;
@@ -85,6 +97,9 @@ startButton.addEventListener('click', async () => {
 });
 
 captureButton.addEventListener('click', async () => {
+    const selectedOverlay = document.querySelector('input[name="overlay"]:checked');
+    if (!selectedOverlay) return;
+    capturePending = true;
     captureButton.disabled = true;
 
     try {
@@ -101,6 +116,7 @@ captureButton.addEventListener('click', async () => {
             headers: { Accept: 'application/json' },
             body: new URLSearchParams({
                 image,
+                overlay: selectedOverlay.value,
                 csrf_token: captureButton.dataset.csrfToken
             })
         });
@@ -110,12 +126,14 @@ captureButton.addEventListener('click', async () => {
             throw new Error(result.error || 'Impossible d’enregistrer la capture.');
         }
 
-        cameraStatus.textContent = 'Capture enregistrée. Tu peux réactiver la webcam.';
+        capturePreview.src = result.image;
+        cameraStatus.textContent = 'Montage enregistré. Tu peux réactiver la webcam.';
     } catch (error) {
         cameraStatus.textContent = error.message || 'Impossible d’envoyer la capture.';
     } finally {
+        capturePending = false;
         startButton.disabled = false;
-        captureButton.disabled = !cameraStream;
+        updateCaptureButton();
     }
 });
 

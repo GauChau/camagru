@@ -4,10 +4,12 @@ declare(strict_types=1);
 use Camagru\Database;
 use Camagru\Repositories\ImageRepository;
 use Camagru\Services\CamEditService;
+use Camagru\Services\OverlayCatalog;
 
 require_once dirname(__DIR__) . '/src/Database.php';
 require_once dirname(__DIR__) . '/src/Repositories/ImageRepository.php';
 require_once dirname(__DIR__) . '/src/Services/CamEditService.php';
+require_once dirname(__DIR__) . '/src/Services/OverlayCatalog.php';
 
 session_start();
 header('Cache-Control: no-store');
@@ -39,14 +41,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!is_string($_POST['image'] ?? null)) {
             throw new InvalidArgumentException('La capture est manquante.');
         }
+        if (!is_string($_POST['overlay'] ?? null)) {
+            throw new InvalidArgumentException('Choisis un calque disponible.');
+        }
 
         $images = new ImageRepository(Database::connect());
-        $service = new CamEditService($images);
+        $service = new CamEditService($images, new OverlayCatalog());
 
-        $fileKey = $service->uploadImage((int) $_SESSION['user_id'], $_POST['image']);
+        $result = $service->uploadImage((int) $_SESSION['user_id'], $_POST['image'], $_POST['overlay']);
 
         http_response_code(201);
-        echo json_encode(['file_key' => $fileKey]);
+        echo json_encode($result);
     } catch (InvalidArgumentException $exception) {
         http_response_code(422);
         echo json_encode(['error' => $exception->getMessage()]);
@@ -62,5 +67,6 @@ if (!is_string($_SESSION['camedit_csrf'] ?? null)) {
     $_SESSION['camedit_csrf'] = bin2hex(random_bytes(32));
 }
 $csrfToken = $_SESSION['camedit_csrf'];
+$overlayNames = (new OverlayCatalog())->listImages();
 
 require dirname(__DIR__) . '/templates/camedit.php';
