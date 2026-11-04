@@ -18,7 +18,9 @@ require __DIR__ . '/partials/header.php';
             <p id="camera-status" role="status">Active la webcam pour afficher l’aperçu en direct.</p>
             <fieldset class="overlay-picker">
                 <legend>Choisis un calque</legend>
-                <?php if ($overlayNames === []): ?>
+                <?php if ($overlayError !== null): ?>
+                    <p role="alert"><?= htmlspecialchars($overlayError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
+                <?php elseif ($overlayNames === []): ?>
                     <p>Aucun calque disponible pour le moment.</p>
                 <?php else: ?>
                     <div class="overlay-list">

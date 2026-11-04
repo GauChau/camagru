@@ -67,6 +67,14 @@ if (!is_string($_SESSION['camedit_csrf'] ?? null)) {
     $_SESSION['camedit_csrf'] = bin2hex(random_bytes(32));
 }
 $csrfToken = $_SESSION['camedit_csrf'];
-$overlayNames = (new OverlayCatalog())->listImages();
+$overlayError = null;
+try {
+    $overlayNames = (new OverlayCatalog())->listImages();
+} catch (Throwable $exception) {
+    error_log('Échec du stock de calques : ' . $exception->getMessage());
+    http_response_code(503);
+    $overlayNames = [];
+    $overlayError = 'Les calques sont momentanément indisponibles. Réessaie plus tard.';
+}
 
 require dirname(__DIR__) . '/templates/camedit.php';

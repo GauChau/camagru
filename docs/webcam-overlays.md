@@ -15,6 +15,7 @@
 - Serve thumbnails from the overlay catalog without exposing other storage files.
 - Show a clear empty state when no overlays are available.
 - Preserve the existing login, CSRF, image validation and failed-save cleanup.
+- Reject combinations that exceed the PHP memory budget with a controlled validation error.
 - Document where to add stock images; `storage/calcs/` is currently empty.
 
 ## Verification plan

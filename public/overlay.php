@@ -22,4 +22,7 @@ try {
     echo $contents;
 } catch (InvalidArgumentException $exception) {
     http_response_code(404);
+} catch (Throwable $exception) {
+    error_log('Échec de lecture du calque : ' . $exception->getMessage());
+    http_response_code(503);
 }

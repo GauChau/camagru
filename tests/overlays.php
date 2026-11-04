@@ -118,6 +118,36 @@ try {
     $check((imagecolorat($composite, 3, 0) & 0xffffff) === 0x00ff00, 'La transparence du calque doit laisser apparaître la capture.');
     $blended = imagecolorsforindex($composite, imagecolorat($composite, 0, 3));
     $check($blended['green'] === 255 && $blended['red'] >= 125 && $blended['red'] <= 129 && $blended['blue'] >= 125 && $blended['blue'] <= 129, 'Un pixel blanc à moitié transparent doit se mélanger avec la capture verte.');
+
+    $permissions = fileperms($path) & 0777;
+    chmod($path, 0000);
+    try {
+        $check($request('GET', '/overlay.php?name=' . rawurlencode($name))['status'] === 503, 'Un fichier de stock illisible doit produire une indisponibilité contrôlée.');
+        $unavailable = $request('GET', '/camedit.php');
+        $check($unavailable['status'] === 503 && str_contains($unavailable['body'], 'momentanément indisponibles'), 'Un stock illisible ne doit pas être présenté comme un stock vide.');
+    } finally {
+        chmod($path, $permissions);
+    }
+
+    // Produire de grands PNG ligne par ligne, sans allouer de grandes images GD dans le test.
+    $largePng = static function (string $pixel): string {
+        $chunk = static fn (string $type, string $data): string => pack('N', strlen($data)) . $type . $data . pack('N', crc32($type . $data));
+        $compressor = deflate_init(ZLIB_ENCODING_DEFLATE);
+        $row = "\0" . str_repeat($pixel, 4096);
+        $compressed = '';
+        for ($y = 0; $y < 4096; $y++) {
+            $compressed .= deflate_add($compressor, $row, ZLIB_NO_FLUSH);
+        }
+        $compressed .= deflate_add($compressor, '', ZLIB_FINISH);
+        return "\x89PNG\r\n\x1a\n" . $chunk('IHDR', pack('NNCCCCC', 4096, 4096, 8, 6, 0, 0, 0))
+            . $chunk('IDAT', $compressed) . $chunk('IEND', '');
+    };
+    file_put_contents($path, $largePng("\xff\x00\x00\x80"));
+    $largeImage = 'data:image/png;base64,' . base64_encode($largePng("\x00\xff\x00\xff"));
+    $maximum = $request('POST', '/camedit.php', array_replace($validFields, ['image' => $largeImage]));
+    $maximumResult = json_decode($maximum['body'], true);
+    $check(($maximum['status'] === 422 && isset($maximumResult['error']))
+        || ($maximum['status'] === 201 && isset($maximumResult['file_key'], $maximumResult['image'])), 'La taille maximale doit produire un montage ou un refus contrôlé, jamais une erreur fatale.');
     echo $checks . " vérifications réussies (stock, vignettes et montage serveur).\n";
 } finally {
     if ($userId !== null) {

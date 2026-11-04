@@ -104,7 +104,9 @@ et les suppriment à la fin.
 Les PNG transparents du stock sont placés dans `storage/calcs/`. Créer ce dossier
 s’il n’existe pas, puis y ajouter les images : elles apparaissent automatiquement
 dans l’éditeur, sans reconstruction. Chaque fichier doit être un PNG de 5 Mo et
-4096 × 4096 pixels maximum. Le stock reste local et est ignoré par Git.
+4096 × 4096 pixels maximum. Une combinaison trop grande pour la mémoire PHP est
+refusée avec un message invitant à réduire la résolution ou la taille du calque.
+Le stock reste local et est ignoré par Git.
 
 Choisir un calque puis activer la webcam, ou l’inverse. Le bouton de capture
 reste désactivé tant que les deux ne sont pas prêts. Le serveur redimensionne le
