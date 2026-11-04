@@ -51,6 +51,20 @@
     line-height: 1.5;
 }
 
+.image-import {
+    display: grid;
+    gap: 10px;
+    margin: 20px 0;
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    text-align: left;
+}
+
+.image-import label { font-size: 14px; font-weight: 600; }
+.image-import input { width: 100%; min-width: 0; font: inherit; }
+.image-import small { color: #666; font-size: 12px; line-height: 1.5; }
+
 .editor-layout {
     display: grid;
     grid-template-columns: minmax(0, 560px) minmax(0, 240px);

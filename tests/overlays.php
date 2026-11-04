@@ -10,6 +10,7 @@ use Camagru\Database;
 $database = null;
 $userId = null;
 $otherUserId = null;
+$uploadPaths = [];
 $directory = dirname(__DIR__) . '/storage/calcs';
 if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
     throw new RuntimeException('Impossible de créer le dossier des calques de test.');
@@ -54,7 +55,7 @@ $request = static function (string $method, string $url, ?array $fields = null) 
         },
     ]);
     if ($fields !== null) {
-        curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($fields));
+        curl_setopt($handle, CURLOPT_POSTFIELDS, ($fields['photo'] ?? null) instanceof CURLFile ? $fields : http_build_query($fields));
     }
     $body = curl_exec($handle);
     if ($body === false) {
@@ -144,6 +145,35 @@ try {
     $history = $request('GET', '/camedit.php');
     preg_match_all('/class="photo-thumbnail" href="([^\"]+)"/', $history['body'], $thumbnails);
     $check(count($thumbnails[1]) === 9 && $thumbnails[1][0] === $result['image_url'], 'Après rechargement, la nouvelle capture est en tête de tous les montages précédents.');
+    $check(str_contains($history['body'], 'type="file"') && str_contains($history['body'], 'accept="image/png,image/jpeg"'), 'L’éditeur propose une image PNG ou JPEG comme alternative à la webcam.');
+    $uploadFields = ['photo' => new CURLFile($path, 'image/png', 'photo.png'), 'overlay' => $name, 'csrf_token' => $token[1]];
+    $uploaded = $request('POST', '/camedit.php', $uploadFields);
+    $uploadResult = json_decode($uploaded['body'], true, flags: JSON_THROW_ON_ERROR);
+    $check($uploaded['status'] === 201 && isset($uploadResult['image_url']), 'Un fichier PNG peut être composé avec un calque sans webcam.');
+    $check($request('POST', '/camedit.php', array_replace($uploadFields, ['csrf_token' => 'bad']))['status'] === 403, 'L’import de fichier exige un jeton CSRF valide.');
+    $authenticatedCookie = $cookie;
+    $cookie = '';
+    $check($request('POST', '/camedit.php', $uploadFields)['status'] === 401, 'L’import de fichier exige un utilisateur connecté.');
+    $cookie = $authenticatedCookie;
+    $jpegPath = tempnam(sys_get_temp_dir(), 'camagru_jpeg_');
+    $uploadPaths[] = $jpegPath;
+    imagejpeg($capture, $jpegPath, 100);
+    $uploaded = $request('POST', '/camedit.php', array_replace($uploadFields, ['photo' => new CURLFile($jpegPath, 'image/jpeg', 'photo.jpg')]));
+    $uploadResult = json_decode($uploaded['body'], true, flags: JSON_THROW_ON_ERROR);
+    $check($uploaded['status'] === 201, 'Un fichier JPEG peut être composé avec un calque sans webcam.');
+    $composedUpload = $request('GET', $uploadResult['image_url']);
+    $decodedUpload = imagecreatefromstring($composedUpload['body']);
+    $check($composedUpload['status'] === 200 && $decodedUpload !== false && imagesx($decodedUpload) === 4
+        && (imagecolorat($decodedUpload, 0, 0) & 0xffffff) === 0xff0000, 'Le fichier importé est décodé et le calque est ajouté côté serveur dans le PNG enregistré.');
+    $history = $request('GET', '/camedit.php');
+    $check(str_contains($history['body'], 'class="photo-thumbnail" href="' . $uploadResult['image_url'] . '"'), 'Le montage importé est conservé dans les créations personnelles.');
+    $badPath = tempnam(sys_get_temp_dir(), 'camagru_bad_');
+    $uploadPaths[] = $badPath;
+    foreach (['<?php echo "bad";', '<svg xmlns="http://www.w3.org/2000/svg"></svg>', substr(file_get_contents($path), 0, 33), str_repeat('x', 5 * 1024 * 1024 + 1)] as $invalidFile) {
+        file_put_contents($badPath, $invalidFile);
+        $check($request('POST', '/camedit.php', array_replace($uploadFields, ['photo' => new CURLFile($badPath, 'image/png', 'fake.png')]))['status'] === 422, 'Un fichier faux, tronqué ou trop volumineux est refusé malgré son extension et son type déclarés.');
+    }
+    $check($request('POST', '/camedit.php', array_replace($uploadFields, ['overlay' => 'missing.png']))['status'] === 422, 'Un import nécessite un calque valide.');
     $composite = imagecreatefromstring(base64_decode(substr($result['image'], strlen('data:image/png;base64,')), true));
     $check($composite !== false && imagesx($composite) === 4 && imagesy($composite) === 4, 'Le montage doit conserver la taille de la capture.');
     $check((imagecolorat($composite, 0, 0) & 0xffffff) === 0xff0000, 'Le pixel rouge du calque doit recouvrir la capture.');
@@ -196,4 +226,5 @@ try {
     unlink($path);
     unlink($directory . '/' . $invalidName);
     unlink($directory . '/' . $linkName);
+    foreach ($uploadPaths as $uploadPath) unlink($uploadPath);
 }

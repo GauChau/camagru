@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        if (!is_string($_POST['image'] ?? null)) {
+        if (!isset($_FILES['photo']) && !is_string($_POST['image'] ?? null)) {
             throw new InvalidArgumentException('La capture est manquante.');
         }
         if (!is_string($_POST['overlay'] ?? null)) {
@@ -53,7 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $images = new ImageRepository(Database::connect());
         $service = new CamEditService($images, new OverlayCatalog());
 
-        $result = $service->uploadImage((int) $_SESSION['user_id'], $_POST['image'], $_POST['overlay']);
+        if (isset($_FILES['photo'])) {
+            $result = $service->uploadFile((int) $_SESSION['user_id'], $_FILES['photo'], $_POST['overlay']);
+        } else {
+            $result = $service->uploadImage((int) $_SESSION['user_id'], $_POST['image'], $_POST['overlay']);
+        }
 
         http_response_code(201);
         echo json_encode($result);

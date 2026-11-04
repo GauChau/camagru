@@ -17,4 +17,4 @@ Image choisie pour être superposée à une capture et apparaître dans le monta
 _Avoid_ : Filtre
 
 **Montage** :
-Image obtenue en superposant un calque à une capture de la webcam.
+Image obtenue en superposant un calque à une capture de la webcam ou à une image importée.

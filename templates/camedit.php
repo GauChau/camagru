@@ -7,18 +7,23 @@ require __DIR__ . '/partials/header.php';
 
 <main class="camedit">
     <div class="editor-layout">
-        <section class="camera-panel" aria-label="Aperçu de la webcam">
+        <section class="camera-panel" aria-label="Création d’un montage">
             <div class="camera-frame">
                 <video id="camera" autoplay muted playsinline aria-label="Webcam en direct"></video>
-                <img id="capture-preview" alt="Dernière capture de la webcam" hidden>
+                <img id="capture-preview" alt="Aperçu de l’image à composer" hidden>
                 <svg id="overlay-preview" viewBox="0 0 1 1" preserveAspectRatio="xMidYMid slice" aria-hidden="true" hidden>
                     <image width="100%" height="100%" preserveAspectRatio="none"></image>
                 </svg>
             </div>
             <button id="start" class="button button-solid" type="button">Activer la webcam</button>
+            <div class="image-import">
+                <label for="photo">Ou importer une image</label>
+                <input id="photo" name="photo" type="file" accept="image/png,image/jpeg" aria-describedby="photo-help">
+                <small id="photo-help">PNG ou JPEG · 5 Mo maximum · 4096 × 4096 pixels maximum.</small>
+            </div>
             <button id="snap" class="button button-solid" type="button" disabled
                 data-csrf-token="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">Capturer</button>
-            <p id="camera-status" role="status">Active la webcam pour afficher l’aperçu en direct.</p>
+            <p id="camera-status" role="status">Active la webcam ou importe une image, puis choisis un calque.</p>
             <fieldset class="overlay-picker">
                 <legend>Choisis un calque</legend>
                 <?php if ($overlayError !== null): ?>

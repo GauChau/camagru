@@ -26,10 +26,29 @@ final class CamEditService
             throw new InvalidArgumentException('La capture est invalide ou trop volumineuse.');
         }
 
+        return $this->composeImage($userId, $contents, $overlayName);
+    }
+
+    public function uploadFile(int $userId, array $file, string $overlayName): array
+    {
+        if (($file['error'] ?? null) !== UPLOAD_ERR_OK
+            || !is_string($file['tmp_name'] ?? null) || !is_uploaded_file($file['tmp_name'])
+            || !is_int($file['size'] ?? null) || $file['size'] < 1 || $file['size'] > 5 * 1024 * 1024) {
+            throw new InvalidArgumentException('Choisis une image PNG ou JPEG de 5 Mo maximum.');
+        }
+        $contents = file_get_contents($file['tmp_name']);
+        if ($contents === false || strlen($contents) > 5 * 1024 * 1024) {
+            throw new InvalidArgumentException('Impossible de lire cette image, ou sa taille dépasse 5 Mo.');
+        }
+        return $this->composeImage($userId, $contents, $overlayName);
+    }
+
+    private function composeImage(int $userId, string $contents, string $overlayName): array
+    {
         $info = @getimagesizefromstring($contents);
-        if ($info === false || $info[2] !== IMAGETYPE_PNG
+        if ($info === false || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)
             || $info[0] < 1 || $info[1] < 1 || $info[0] > 4096 || $info[1] > 4096) {
-            throw new InvalidArgumentException('La capture doit être un PNG de 4096 × 4096 pixels maximum.');
+            throw new InvalidArgumentException('L’image doit être un PNG ou JPEG de 4096 × 4096 pixels maximum.');
         }
 
         $overlayContents = $this->overlays->readImage($overlayName);

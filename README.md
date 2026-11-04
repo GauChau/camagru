@@ -126,6 +126,13 @@ plus ancien. Les nouvelles captures s’ajoutent immédiatement en tête de list
 restent présentes après rechargement. Cliquer sur une miniature ouvre le montage
 en grand. Sur mobile, cette section passe sous l’éditeur.
 
+Pour créer un montage sans webcam, utiliser « Ou importer une image » puis
+choisir un calque et cliquer sur « Enregistrer le montage ». Les PNG et JPEG sont
+acceptés jusqu’à 5 Mo et 4096 × 4096 pixels. L’aperçu conserve l’image entière ;
+le serveur valide et décode le fichier, applique le calque et enregistre le
+résultat en PNG. Le montage apparaît aussitôt dans « Mes créations » et dans la
+galerie publique. Il est possible de revenir à la webcam avec son bouton.
+
 ## Activation du compte
 
 Le module d’activation gère la création du compte inactif, le lien envoyé par
