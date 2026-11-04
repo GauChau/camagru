@@ -153,29 +153,16 @@ final class UserRepository
         return $activation_token_hash === false ? null : $activation_token_hash;
     }
 
-    public function getUserIdByActivationToken(string $token): ?int
-    {
-        $query = $this->database->prepare(
-            'SELECT id FROM users WHERE activation_token_hash = :token_hash'
-        );
-        $query->execute([
-            'token_hash' => hash('sha256', $token),
-        ]);
-        $id = $query->fetchColumn();
-
-        return $id === false ? null : (int) $id;
-    }
-
-    public function updateActivationStatus(int $id): bool
+    public function activateByTokenHash(string $tokenHash): bool
     {
         $query = $this->database->prepare(
             'UPDATE users
             SET activation = TRUE,
                 activation_token_hash = NULL,
                 activation_token_expires_at = NULL
-            WHERE id = :idtoactivate'
+            WHERE activation_token_hash = :token_hash AND activation = FALSE'
         );
-        $query->execute(['idtoactivate' => $id]);
+        $query->execute(['token_hash' => $tokenHash]);
 
         return $query->rowCount() === 1;
     }

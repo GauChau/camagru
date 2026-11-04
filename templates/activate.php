@@ -11,8 +11,10 @@ require __DIR__ . '/partials/header.php';
             <?php else: ?>
                 <?php if ($resendSuccess): ?>
                     <p class="form-status" role="status">If an account still needs activation for this email address, a new activation email has been sent.</p>
-                <?php else: ?>
+                <?php elseif ($token !== '' || $errors !== []): ?>
                     <p class="form-status" role="alert">An error has occured.</p>
+                <?php else: ?>
+                    <p class="form-status">Renseigne ton adresse email pour recevoir un nouveau lien d’activation.</p>
                 <?php endif; ?>
                 <form class="auth-form" method="post" action="/activate.php">
                     <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">

@@ -4,22 +4,36 @@ declare(strict_types=1);
 namespace Camagru\Services;
 
 use Camagru\Repositories\UserRepository;
+use Closure;
 
 final class ActivationService
 {
-    public function __construct(private UserRepository $users)
+    private Closure $sendEmail;
+
+    public function __construct(private UserRepository $users, ?callable $sendEmail = null)
     {
+        $this->sendEmail = Closure::fromCallable($sendEmail ?? 'mail');
+    }
+
+    public function createPendingAccount(string $login, string $email, string $passwordHash): array
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->users->create($login, $email, $passwordHash, hash('sha256', $token));
+
+        if ($this->sendActivationEmail($email, $token) !== []) {
+            return ['activation_email' => 'Ton compte a été créé, mais l’email d’activation n’a pas pu être envoyé. Demande un nouvel envoi.'];
+        }
+
+        return [];
     }
 
     public function activate(string $token): bool
     {
-        $id = $this->users->getUserIdByActivationToken($token);
-
-        if ($id === null) {
+        if (preg_match('/\A[0-9a-f]{64}\z/', $token) !== 1) {
             return false;
         }
 
-        return $this->users->updateActivationStatus($id);
+        return $this->users->activateByTokenHash(hash('sha256', $token));
     }
 
     public function resendActivationEmail(string $email): array
@@ -38,7 +52,7 @@ final class ActivationService
         return $this->sendActivationEmail($email, $token);
     }
 
-    public function createNewEmailToken(string $email): ?string
+    private function createNewEmailToken(string $email): ?string
     {
         $token = bin2hex(random_bytes(32));
         $activationTokenHash = hash('sha256', $token);
@@ -49,12 +63,12 @@ final class ActivationService
         return $token;
     }
 
-    public function sendActivationEmail(string $email, string $token): array
+    private function sendActivationEmail(string $email, string $token): array
     {
         $lien = rtrim((string) getenv('APP_URL'), '/')
             . '/activate.php?'
             . http_build_query(['token' => $token]);
-        $ok = mail(
+        $ok = ($this->sendEmail)(
             $email,
             'Confirme ton compte Camagru',
             "Clique sur ce lien pour activer ton compte :\r\n" . $lien,

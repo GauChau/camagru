@@ -19,6 +19,9 @@ require __DIR__ . '/partials/header.php';
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>
+                <?php if (isset($errors['activation_email'])): ?>
+                    <p class="form-status"><a href="/activate.php">Renvoyer l’email d’activation</a></p>
+                <?php endif; ?>
                 <div class="form-field">
                     <label for="login">Login</label>
                     <input id="login" name="login" type="text" value="<?= $escape($values['login']) ?>" autocomplete="username" autocapitalize="none" spellcheck="false" required>

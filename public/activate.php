@@ -52,10 +52,7 @@ try {
                 http_response_code(502);
             }
         }
-    // Les jetons envoyés par RegistrationService contiennent 64 caractères hexadécimaux.
-    } elseif (preg_match('/\A[0-9a-f]{64}\z/', $token) !== 1) {
-        http_response_code(400);
-    } else {
+    } elseif ($token !== '') {
         $users = new UserRepository(Database::connect());
         $activation = new ActivationService($users);
 

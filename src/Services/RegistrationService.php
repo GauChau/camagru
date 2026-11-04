@@ -15,7 +15,7 @@ final class RegistrationService
     ) {
     }
 
-    /** Retourne les erreurs du formulaire, ou un tableau vide si le compte est créé. */
+    /** Tableau vide après création et envoi ; activation_email indique un compte créé sans email envoyé. */
     public function register(string $login, string $email, string $password, string $confirmation): array
     {
         $login = trim($login);
@@ -50,11 +50,8 @@ final class RegistrationService
 
         // Seul le hash est transmis au repository puis stocké dans users.password.
         $passwordHash = password_hash($password, PASSWORD_ARGON2ID);
-        $token = bin2hex(random_bytes(32));
-        $activationTokenHash = hash('sha256', $token);
-
         try {
-            $this->users->create($login, $email, $passwordHash, $activationTokenHash);
+            return $this->activation->createPendingAccount($login, $email, $passwordHash);
         } catch (PDOException $exception) {
             if ($exception->getCode() !== '23505') {
                 throw $exception;
@@ -64,7 +61,6 @@ final class RegistrationService
             return $this->findConflicts($login, $email)
                 ?: ['registration' => 'Ce login ou cette adresse email est déjà utilisé.'];
         }
-        return $this->activation->sendActivationEmail($email, $token);
     }
 
     private function findConflicts(string $login, string $email): array

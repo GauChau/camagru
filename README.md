@@ -99,6 +99,20 @@ Ils vérifient le parcours HTTP, les champs invalides, les doublons, le hash et
 les contraintes PostgreSQL. Ils créent des comptes portant un préfixe aléatoire
 et les suppriment à la fin.
 
+## Activation du compte
+
+Le module d’activation gère la création du compte inactif, le lien envoyé par
+email, son renouvellement et sa consommation. Si le premier email ne peut pas
+être envoyé, le compte est conservé et l’inscription propose un accès au renvoi.
+Un renvoi remplace le précédent lien, même si l’envoi échoue.
+
+Les tests utilisent PostgreSQL et un envoi d’email simulé. Toutes leurs écritures
+sont annulées à la fin :
+
+```sh
+docker compose exec -T web php tests/activation.php
+```
+
 ## Paramètres du compte
 
 Les utilisateurs connectés accèdent à `/settings.php` avec l’engrenage situé en
