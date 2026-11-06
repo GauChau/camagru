@@ -6,6 +6,10 @@
 # Fichiers générés par l'application et données locales.
 /storage/*
 !/storage/.gitkeep
+!/storage/calcs/
+/storage/calcs/*
+!/storage/calcs/sticker-*.png
+!/storage/calcs/dollars-mosaique-15.png
 /data/
 /postgres_data/
 /backups/

@@ -20,6 +20,8 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $errors = [];
+$recoverySuccess = $_SESSION['recovery_success'] ?? false;
+unset($_SESSION['recovery_success']);
 
 if (!isset($_SESSION['login_csrf'])) {
     $_SESSION['login_csrf'] = bin2hex(random_bytes(32));
@@ -48,7 +50,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST')
                 header('Location: /camedit.php', true, 303);
                 exit;
             }
-            error_log(print_r($errors, true));
             http_response_code(422);
         }catch (Throwable $exception) {
             http_response_code(503);

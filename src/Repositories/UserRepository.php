@@ -187,4 +187,49 @@ final class UserRepository
     }
 
 
+    public function updateRecoveryTokenHash(string $tokenHash, string $email, string $expiresAt): bool
+    {
+        $query = $this->database->prepare(
+            'UPDATE users
+            SET pwdrecovery_token_hash = :token_hash,
+                pwdrecovery_token_expires_at = :expires_at
+            WHERE lower(btrim(email)) = lower(btrim(:email))'
+        );
+        $query->execute([
+            'email' => $email,
+            'token_hash' => $tokenHash,
+            'expires_at' => $expiresAt,
+        ]);
+        return $query->rowCount() === 1;
+    }
+
+    public function getIdbyRecoveryHash(string $tokenHash): ?int
+    {
+        $query = $this->database->prepare(
+            'SELECT id
+                FROM users
+                WHERE pwdrecovery_token_hash = :token_hash
+                AND pwdrecovery_token_expires_at > CURRENT_TIMESTAMP'
+        );
+        $query->execute(['token_hash' => $tokenHash]);
+        $id = $query->fetchColumn();
+
+        return $id === false ? null : (int) $id;
+    }
+
+    public function resetPasswordByRecoveryHash(string $tokenHash, string $passwordHash): bool
+    {
+        // Vérifier et consommer le jeton dans le même UPDATE empêche sa réutilisation.
+        $query = $this->database->prepare(
+            'UPDATE users
+             SET password = :password,
+                 pwdrecovery_token_hash = NULL,
+                 pwdrecovery_token_expires_at = NULL
+             WHERE pwdrecovery_token_hash = :token_hash
+               AND pwdrecovery_token_expires_at > CURRENT_TIMESTAMP'
+        );
+        $query->execute(['password' => $passwordHash, 'token_hash' => $tokenHash]);
+
+        return $query->rowCount() === 1;
+    }
 }

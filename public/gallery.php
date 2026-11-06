@@ -2,12 +2,12 @@
 declare(strict_types=1);
 
 use Camagru\Database;
-use Camagru\Repositories\GalleryRepository;
+use Camagru\Repositories\ImageRepository;
 use Camagru\Repositories\UserRepository;
 use Camagru\Services\GalleryService;
 
 require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/GalleryRepository.php';
+require_once dirname(__DIR__) . '/src/Repositories/ImageRepository.php';
 require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
 require_once dirname(__DIR__) . '/src/Services/GalleryService.php';
 
@@ -37,7 +37,7 @@ $csrfToken = $_SESSION['gallery_csrf'];
 
 try {
     $database = Database::connect();
-    $gallery = new GalleryRepository($database);
+    $imageRepository = new ImageRepository($database);
     $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
     if ($userId !== null && (new UserRepository($database))->findById($userId) === null) {
         unset($_SESSION['user_id']);
@@ -46,7 +46,7 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($userId === null) {
             http_response_code(401);
-            $error = 'Connecte-toi pour aimer ou commenter un montage.';
+            $error = 'Connecte-toi pour aimer, commenter ou supprimer un montage.';
         } elseif (!is_string($_POST['csrf_token'] ?? null) || !hash_equals($csrfToken, $_POST['csrf_token'])) {
             http_response_code(403);
             $error = 'Le formulaire a expiré. Réessaie avec cette page.';
@@ -59,24 +59,35 @@ try {
                 if (!$imageId || ($action === 'comment' && !is_string($_POST['comment'] ?? null))) {
                     throw new InvalidArgumentException('Le montage ou le commentaire est invalide.');
                 }
-                if (!(new GalleryService($gallery))->react($imageId, $userId, $action, $commentValue)) {
+                if (!(new GalleryService($imageRepository))->react($imageId, $userId, $action, $commentValue)) {
                     http_response_code(404);
                     $error = 'Ce montage n’est plus disponible.';
                 } else {
-                    $_SESSION['gallery_notice'] = $action === 'comment' ? 'Ton commentaire a été publié.' : 'Ton choix a été enregistré.';
-                    header('Location: /gallery.php?page=' . $page . '&comments_for=' . $imageId . '#image-' . $imageId, true, 303);
+                    $_SESSION['gallery_notice'] = match ($action) {
+                        'comment' => 'Ton commentaire a été publié.',
+                        'delete' => 'Ton montage a été supprimé.',
+                        default => 'Ton choix a été enregistré.',
+                    };
+                    $location = '/gallery.php?page=' . $page;
+                    if ($action !== 'delete') {
+                        $location .= '&comments_for=' . $imageId . '#image-' . $imageId;
+                    }
+                    header('Location: ' . $location, true, 303);
                     exit;
                 }
             } catch (InvalidArgumentException $exception) {
                 http_response_code(422);
                 $error = $exception->getMessage();
+            } catch (DomainException $exception) {
+                http_response_code(403);
+                $error = $exception->getMessage();
             }
         }
     }
-    $total = $gallery->countImages();
+    $total = $imageRepository->countImages();
     $pageCount = max(1, (int) ceil($total / 6));
     $page = min($page, $pageCount);
-    $images = $gallery->getPage($page, 6, $userId, $commentsFor, $commentPage);
+    $images = $imageRepository->getPage($page, 6, $userId, $commentsFor, $commentPage);
 } catch (Throwable $exception) {
     http_response_code(503);
     $error = 'La galerie est momentanément indisponible. Réessaie plus tard.';

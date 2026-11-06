@@ -18,7 +18,8 @@ try {
         throw new InvalidArgumentException('Calque manquant.');
     }
     $contents = (new OverlayCatalog())->readImage($_GET['name']);
-    header('Content-Type: image/png');
+    $info = getimagesizefromstring($contents);
+    header('Content-Type: ' . image_type_to_mime_type($info[2]));
     echo $contents;
 } catch (InvalidArgumentException $exception) {
     http_response_code(404);

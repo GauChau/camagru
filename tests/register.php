@@ -145,7 +145,7 @@ try {
     ] as [$duplicateLogin, $duplicateEmail]) {
         $database->beginTransaction();
         try {
-            $repository->create($duplicateLogin, $duplicateEmail, $user['password']);
+            $repository->create($duplicateLogin, $duplicateEmail, $user['password'], hash('sha256', random_bytes(32)));
             $check(false, 'PostgreSQL doit refuser les doublons même sans validation PHP.');
         } catch (PDOException $exception) {
             $check($exception->getCode() === '23505', 'Une contrainte d’unicité doit bloquer le doublon.');

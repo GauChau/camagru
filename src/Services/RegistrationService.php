@@ -31,9 +31,9 @@ final class RegistrationService
         }
 
         // Le mode Unicode compte les caractères, pas les octets des caractères accentués.
-        // if (preg_match('/\A.{10,}\z/us', $password) !== 1 || preg_match('/[0-9]/', $password) !== 1) {
-        //     $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères et au moins un chiffre.';
-        // }
+        if (preg_match('/\A.{10,}\z/us', $password) !== 1 || preg_match('/[0-9]/', $password) !== 1) {
+            $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères et au moins un chiffre.';
+        }
 
         if ($password !== $confirmation) {
             $errors['confirm_password'] = 'Les mots de passe doivent être identiques.';

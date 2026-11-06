@@ -1,0 +1,42 @@
+{
+  "generator": "Built-in image_gen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "file": "storage/calcs/sticker-macron-baguette.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. Recognizable caricature of Emmanuel Macron, mischievous raised eyebrow and confident grin, wearing a navy suit, holding a huge baguette like an electric guitar, extravagant rockstar pose."
+    },
+    {
+      "file": "storage/calcs/sticker-macron-danse.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. Recognizable caricature of Emmanuel Macron in a navy suit and tie doing a ridiculously enthusiastic disco dance, tiny sparkling disco accents attached close to his silhouette, exaggerated smug grin."
+    },
+    {
+      "file": "storage/calcs/sticker-chien-astronaute.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. An adorable plump corgi in a tiny astronaut suit and clear round space helmet, floating with its short legs stretched out, its tongue sticking out in delighted confusion."
+    },
+    {
+      "file": "storage/calcs/sticker-chien-dj.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. A cheerful shiba inu wearing oversized DJ headphones and black sunglasses, its paws on a tiny DJ mixer, comically serious music producer expression."
+    },
+    {
+      "file": "storage/calcs/sticker-chat-clavier.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. An orange tabby cat furiously typing on a tiny laptop, wild determined eyes, tufts of fur standing up, the funniest tiny angry programmer pose."
+    },
+    {
+      "file": "storage/calcs/sticker-chat-patron.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. A supremely smug black and white tuxedo cat wearing a little business necktie, sitting upright with crossed front paws on a tiny stack of papers, exaggerated judging raised eyebrow."
+    },
+    {
+      "file": "storage/calcs/sticker-sam-altman-magicien.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. Recognizable caricature of Sam Altman in a gray T-shirt and oversized wizard hat, looking delighted and slightly overwhelmed while pulling a miniature friendly robot out of a magician top hat."
+    },
+    {
+      "file": "storage/calcs/sticker-dario-securite.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. Recognizable caricature of Dario Amodei, distinctive curly dark hair, dark shirt, carefully cradling a cute tiny robot wrapped in an absurd amount of bubble wrap, his earnest protective expression exaggerated comically."
+    },
+    {
+      "file": "storage/calcs/sticker-jensen-chef.png",
+      "prompt": "Use case: illustration-story. Asset type: ONE standalone funny die-cut sticker PNG for a webcam photo editor. Style: playful editorial caricature, bold clean dark outlines, expressive face, bright saturated colors, subtle cel shading and crisp thick white sticker border around the subject silhouette. Composition: square 1024x1024 transparent canvas, a single compact sticker centered, subject fully visible with generous transparent margins; no scenery or rectangular panel. Actual transparent RGBA background, no drawn checkerboard, no text, no watermark. Friendly absurd humor. Recognizable caricature of Jensen Huang with silver hair and his black leather jacket, wearing a chef hat, proudly presenting a tiny frying pan containing one giant bright green computer GPU chip, delighted exaggerated smile."
+    }
+  ]
+}

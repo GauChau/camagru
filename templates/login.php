@@ -7,6 +7,9 @@ require __DIR__ . '/partials/header.php';
     <main class="auth-page" aria-labelledby="auth-title">
         <div class="auth-panel">
             <h1 id="auth-title">Login</h1>
+            <?php if ($recoverySuccess): ?>
+                <p class="form-status" role="status">Ton mot de passe a été modifié. Tu peux te connecter.</p>
+            <?php endif; ?>
             <form class="auth-form" method="post" action="/login.php" data-auth-form="login">
                 <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
                 <?php foreach ($errors as $error): ?>
@@ -25,6 +28,7 @@ require __DIR__ . '/partials/header.php';
                 <button class="button button-solid auth-submit" type="submit">Login</button>
                 <p class="form-status" role="status" hidden></p>
             </form>
+            <p class="auth-switch">Mot de passe oublié ? <a href="/pwdchange.php">Changer mon mot de passe</a></p>
             <p class="auth-switch">Pas encore de compte ? <a href="/register.php">Register</a></p>
         </div>
     </main>

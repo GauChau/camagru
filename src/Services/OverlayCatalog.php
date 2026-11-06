@@ -41,8 +41,13 @@ final class OverlayCatalog
 
     private function isImage(string $name): bool
     {
+        $expectedType = match (strtolower(pathinfo($name, PATHINFO_EXTENSION))) {
+            'png' => IMAGETYPE_PNG,
+            'jpg', 'jpeg' => IMAGETYPE_JPEG,
+            default => null,
+        };
         if ($name !== basename($name) || str_contains($name, "\0")
-            || strtolower(pathinfo($name, PATHINFO_EXTENSION)) !== 'png') {
+            || $expectedType === null) {
             return false;
         }
         $path = self::DIRECTORY . '/' . $name;
@@ -63,7 +68,7 @@ final class OverlayCatalog
             restore_error_handler();
         }
 
-        return $info !== false && $info[2] === IMAGETYPE_PNG
+        return $info !== false && $info[2] === $expectedType
             && $info[0] > 0 && $info[1] > 0 && $info[0] <= 4096 && $info[1] <= 4096
             && filesize($path) <= 5 * 1024 * 1024;
     }

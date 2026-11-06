@@ -5,7 +5,7 @@ const cameraStatus = document.querySelector('#camera-status');
 const captureButton = document.querySelector('#snap');
 const overlayPicker = document.querySelector('.overlay-picker');
 const overlayPreview = document.querySelector('#overlay-preview');
-const overlayImage = overlayPreview.querySelector('image');
+const overlayInputs = [...overlayPicker.querySelectorAll('input[name="overlays[]"]')];
 const photosList = document.querySelector('#photos-list');
 const photosEmpty = document.querySelector('#photos-empty');
 const photoInput = document.querySelector('#photo');
@@ -18,19 +18,24 @@ let importedPreviewUrl = null;
 let previewSaved = false;
 
 function updateCaptureButton() {
-    captureButton.disabled = (!cameraReady && !importedFile) || capturePending
-        || !document.querySelector('input[name="overlay"]:checked');
+    captureButton.disabled = (!cameraReady && !importedFile) || capturePending;
     captureButton.textContent = importedFile ? 'Enregistrer le montage' : 'Capturer';
 }
 
 function updateOverlayPreview() {
-    const selectedOverlay = document.querySelector('input[name="overlay"]:checked');
-    overlayPreview.toggleAttribute('hidden', !selectedOverlay || previewSaved);
-    if (selectedOverlay) {
-        overlayImage.setAttribute('href', `/overlay.php?name=${encodeURIComponent(selectedOverlay.value)}`);
-    } else {
-        overlayImage.removeAttribute('href');
-    }
+    const selectedOverlays = overlayInputs.filter((input) => input.checked);
+    overlayPreview.toggleAttribute('hidden', selectedOverlays.length === 0 || previewSaved);
+    overlayPreview.replaceChildren(...selectedOverlays.map((input) => {
+        const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        image.setAttribute('width', '100%');
+        image.setAttribute('height', '100%');
+        image.setAttribute('preserveAspectRatio', 'none');
+        image.setAttribute('href', `/overlay.php?name=${encodeURIComponent(input.value)}`);
+        return image;
+    }));
+    overlayInputs.forEach((input) => {
+        input.disabled = !input.checked && selectedOverlays.length >= 20;
+    });
     updateCaptureButton();
 }
 
@@ -91,7 +96,7 @@ photoInput.addEventListener('change', async () => {
         capturePreview.hidden = false;
         overlayPreview.setAttribute('viewBox', `0 0 ${image.naturalWidth} ${image.naturalHeight}`);
         overlayPreview.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-        cameraStatus.textContent = 'Image prête. Choisis un calque puis enregistre le montage.';
+        cameraStatus.textContent = 'Image prête. Ajoute des stickers si tu le souhaites, puis enregistre le montage.';
     } catch (error) {
         if (currentRequest !== requestId) return;
         photoInput.value = '';
@@ -181,8 +186,8 @@ startButton.addEventListener('click', async () => {
 });
 
 captureButton.addEventListener('click', async () => {
-    const selectedOverlay = document.querySelector('input[name="overlay"]:checked');
-    if (!selectedOverlay || capturePending || (!cameraReady && !importedFile)) return;
+    const selectedOverlays = overlayInputs.filter((input) => input.checked);
+    if (capturePending || (!cameraReady && !importedFile)) return;
     capturePending = true;
     captureButton.disabled = true;
     photoInput.disabled = true;
@@ -199,7 +204,7 @@ captureButton.addEventListener('click', async () => {
             capturePreview.hidden = false;
             video.hidden = true;
         }
-        body.set('overlay', selectedOverlay.value);
+        selectedOverlays.forEach((input) => body.append('overlays[]', input.value));
         body.set('csrf_token', captureButton.dataset.csrfToken);
         stopCamera();
         startButton.disabled = true;

@@ -28,7 +28,7 @@ require __DIR__ . '/partials/header.php';
                 </div>
                 <div class="form-field">
                     <label for="password">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password" minlength="1" pattern="(?=.*[0-9])[\s\S]{1,}" aria-describedby="password-help" required>
+                    <input id="password" name="password" type="password" autocomplete="new-password" minlength="10" pattern="(?=.*[0-9])[\s\S]{10,}" aria-describedby="password-help" required>
                     <small id="password-help">Au moins 10 caractères et au moins un chiffre.</small>
                 </div>
                 <div class="form-field">

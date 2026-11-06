@@ -46,6 +46,11 @@ require __DIR__ . '/partials/header.php';
                                         <button class="gallery-like" type="submit" name="action" value="<?= $image['liked'] ? 'unlike' : 'like' ?>" aria-pressed="<?= $image['liked'] ? 'true' : 'false' ?>">
                                             <span aria-hidden="true"><?= $image['liked'] ? '♥' : '♡' ?></span> <?= $image['liked'] ? 'Retirer mon like' : 'J’aime' ?> <span class="gallery-count">(<?= $image['like_count'] ?>)</span>
                                         </button>
+                                        <?php if ($userId === (int) $image['user_id']): ?>
+                                            <button class="gallery-delete" type="submit" name="action" value="delete">
+                                                <span aria-hidden="true">🗑</span> Supprimer
+                                            </button>
+                                        <?php endif; ?>
                                     </form>
                                 <?php else: ?>
                                     <span>♡ <?= $image['like_count'] ?> j’aime</span>

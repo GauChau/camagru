@@ -46,17 +46,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!isset($_FILES['photo']) && !is_string($_POST['image'] ?? null)) {
             throw new InvalidArgumentException('La capture est manquante.');
         }
-        if (!is_string($_POST['overlay'] ?? null)) {
-            throw new InvalidArgumentException('Choisis un calque disponible.');
+        $overlayNames = $_POST['overlays'] ?? [];
+        // Accepter aussi les requêtes de l’ancienne version de l’éditeur.
+        if (array_key_exists('overlay', $_POST)) {
+            if (array_key_exists('overlays', $_POST) || !is_string($_POST['overlay'])) {
+                throw new InvalidArgumentException('La sélection de stickers est invalide.');
+            }
+            $overlayNames = $_POST['overlay'] === '' ? [] : [$_POST['overlay']];
+        }
+        if (!is_array($overlayNames)) {
+            throw new InvalidArgumentException('La sélection de stickers est invalide.');
         }
 
         $images = new ImageRepository(Database::connect());
         $service = new CamEditService($images, new OverlayCatalog());
 
         if (isset($_FILES['photo'])) {
-            $result = $service->uploadFile((int) $_SESSION['user_id'], $_FILES['photo'], $_POST['overlay']);
+            $result = $service->uploadFile((int) $_SESSION['user_id'], $_FILES['photo'], $overlayNames);
         } else {
-            $result = $service->uploadImage((int) $_SESSION['user_id'], $_POST['image'], $_POST['overlay']);
+            $result = $service->uploadImage((int) $_SESSION['user_id'], $_POST['image'], $overlayNames);
         }
 
         http_response_code(201);

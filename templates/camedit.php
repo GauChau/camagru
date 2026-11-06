@@ -12,7 +12,6 @@ require __DIR__ . '/partials/header.php';
                 <video id="camera" autoplay muted playsinline aria-label="Webcam en direct"></video>
                 <img id="capture-preview" alt="Aperçu de l’image à composer" hidden>
                 <svg id="overlay-preview" viewBox="0 0 1 1" preserveAspectRatio="xMidYMid slice" aria-hidden="true" hidden>
-                    <image width="100%" height="100%" preserveAspectRatio="none"></image>
                 </svg>
             </div>
             <button id="start" class="button button-solid" type="button">Activer la webcam</button>
@@ -23,9 +22,10 @@ require __DIR__ . '/partials/header.php';
             </div>
             <button id="snap" class="button button-solid" type="button" disabled
                 data-csrf-token="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">Capturer</button>
-            <p id="camera-status" role="status">Active la webcam ou importe une image, puis choisis un calque.</p>
+            <p id="camera-status" role="status">Active la webcam ou importe une image, puis ajoute les stickers de ton choix.</p>
             <fieldset class="overlay-picker">
-                <legend>Choisis un calque</legend>
+                <legend>Choisis tes stickers</legend>
+                <p>Coche plusieurs stickers pour les superposer (20 maximum). Décoche-les pour les retirer. Ils se superposent dans l’ordre du catalogue.</p>
                 <?php if ($overlayError !== null): ?>
                     <p role="alert"><?= htmlspecialchars($overlayError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
                 <?php elseif ($overlayNames === []): ?>
@@ -34,7 +34,7 @@ require __DIR__ . '/partials/header.php';
                     <div class="overlay-list">
                         <?php foreach ($overlayNames as $overlayName): ?>
                             <label class="overlay-option">
-                                <input type="radio" name="overlay" value="<?= htmlspecialchars($overlayName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+                                <input type="checkbox" name="overlays[]" value="<?= htmlspecialchars($overlayName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
                                 <img src="/overlay.php?name=<?= rawurlencode($overlayName) ?>" alt="" loading="lazy">
                                 <span><?= htmlspecialchars(pathinfo($overlayName, PATHINFO_FILENAME), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
                             </label>

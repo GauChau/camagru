@@ -8,7 +8,9 @@ CREATE TABLE users (
     email text NOT NULL,
     activation boolean NOT NULL DEFAULT FALSE,
     activation_token_hash TEXT,
-    activation_token_expires_at TIMESTAMPTZ
+    activation_token_expires_at TIMESTAMPTZ,
+    pwdrecovery_token_hash TEXT,
+    pwdrecovery_token_expires_at TIMESTAMPTZ
 );
 
 -- L'unicité porte sur chaque champ séparément, sans distinction de casse.
