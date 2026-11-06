@@ -22,10 +22,10 @@ require __DIR__ . '/partials/header.php';
             </div>
             <button id="snap" class="button button-solid" type="button" disabled
                 data-csrf-token="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">Capturer</button>
-            <p id="camera-status" role="status">Active la webcam ou importe une image, puis ajoute les stickers de ton choix.</p>
+            <p id="camera-status" role="status">Active la webcam et choisis au moins un sticker, ou importe une image avec ou sans sticker.</p>
             <fieldset class="overlay-picker">
                 <legend>Choisis tes stickers</legend>
-                <p>Coche plusieurs stickers pour les superposer (20 maximum). Décoche-les pour les retirer. Ils se superposent dans l’ordre du catalogue.</p>
+                <p>Coche plusieurs stickers pour les superposer (20 maximum). Décoche-les pour les retirer. Ils se superposent dans l’ordre du catalogue. Au moins un sticker est nécessaire pour la capture webcam.</p>
                 <?php if ($overlayError !== null): ?>
                     <p role="alert"><?= htmlspecialchars($overlayError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
                 <?php elseif ($overlayNames === []): ?>

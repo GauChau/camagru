@@ -3,13 +3,14 @@
 ## Agreed behavior
 
 - Show the available overlays from `storage/calcs/` in the webcam editor.
-- Select zero, one or several overlays with checkboxes (up to 20).
+- Select one or several overlays for webcam capture, or zero to 20 overlays for an imported image.
 - Stack selected overlays in catalogue order, both in the preview and on the server.
 - Fix its position and resize it to fill the entire captured image.
 - Compose the saved image on the server.
 - Show the selected overlay above the webcam frame whether the camera is active or stopped.
 - After saving, show the server-composed montage and hide the preview overlays to avoid applying them twice.
-- Enable capture when the webcam or an imported image is ready; overlays are optional.
+- Enable webcam capture only when the camera is ready and at least one overlay is selected; reject webcam submissions without overlays on the server too.
+- Allow saving an imported image with or without overlays once the image is ready.
 
 ## Delivery
 
@@ -25,6 +26,6 @@
 ## Verification plan
 
 Exercise the editor over HTTP with generated PNG captures and stock fixtures:
-catalog display, optional/multiple selection, stacking order, composite pixels and rejected invalid inputs.
+catalog display, required webcam selection, optional import selection, multiple overlays, stacking order, composite pixels and rejected invalid inputs.
 These tests cover PHP integration; real webcam permissions require browser testing.
 Review baseline: `c9ef0d1`.

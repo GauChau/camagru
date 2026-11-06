@@ -16,6 +16,10 @@ final class CamEditService
 
     public function uploadImage(int $userId, string $image, array $overlayNames = []): array
     {
+        if ($overlayNames === []) {
+            throw new InvalidArgumentException('Sélectionne au moins un sticker pour capturer une image avec la webcam.');
+        }
+
         $prefix = 'data:image/png;base64,';
         if (!str_starts_with($image, $prefix) || strlen($image) > 7 * 1024 * 1024) {
             throw new InvalidArgumentException('La capture doit être un PNG de 5 Mo maximum.');

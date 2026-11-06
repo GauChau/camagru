@@ -18,7 +18,8 @@ let importedPreviewUrl = null;
 let previewSaved = false;
 
 function updateCaptureButton() {
-    captureButton.disabled = (!cameraReady && !importedFile) || capturePending;
+    captureButton.disabled = (!cameraReady && !importedFile) || capturePending
+        || (!importedFile && !overlayInputs.some((input) => input.checked));
     captureButton.textContent = importedFile ? 'Enregistrer le montage' : 'Capturer';
 }
 
@@ -187,7 +188,8 @@ startButton.addEventListener('click', async () => {
 
 captureButton.addEventListener('click', async () => {
     const selectedOverlays = overlayInputs.filter((input) => input.checked);
-    if (capturePending || (!cameraReady && !importedFile)) return;
+    if (capturePending || (!cameraReady && !importedFile)
+        || (!importedFile && selectedOverlays.length === 0)) return;
     capturePending = true;
     captureButton.disabled = true;
     photoInput.disabled = true;

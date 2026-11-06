@@ -43,10 +43,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST')
             $loginserv = new LoginService($users);
             $errors = $loginserv->log($login, $password);
             if ($errors === []) {
+                // Invalider la session anonyme avant de lui associer une identité.
+                if (!session_regenerate_id(true)) {
+                    throw new RuntimeException('Impossible de renouveler la session.');
+                }
                 $_SESSION['login_success'] = true;
                 $_SESSION['login_csrf'] = bin2hex(random_bytes(32));
                 $_SESSION['user_id'] = $users->getUserId($login);
-                // Recharger la page de succès ne doit pas renvoyer une inscription.
                 header('Location: /camedit.php', true, 303);
                 exit;
             }

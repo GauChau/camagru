@@ -198,17 +198,18 @@ try {
     $history = $request('GET', '/camedit.php');
     preg_match_all('/class="photo-thumbnail" href="([^\"]+)"/', $history['body'], $thumbnails);
     $check(count($thumbnails[1]) === 9 && $thumbnails[1][0] === $result['image_url'], 'Après rechargement, la nouvelle capture est en tête de tous les montages précédents.');
+    $countImages = $database->prepare('SELECT COUNT(*) FROM images WHERE user_id = :id');
+    $countImages->execute(['id' => $userId]);
+    $countBeforeMissingOverlay = (int) $countImages->fetchColumn();
     foreach ([$fields, $fields + ['overlay' => '']] as $withoutOverlay) {
         $savedWithoutOverlay = $request('POST', '/camedit.php', $withoutOverlay);
         $plainResult = json_decode($savedWithoutOverlay['body'], true, flags: JSON_THROW_ON_ERROR);
-        $check($savedWithoutOverlay['status'] === 201 && isset($plainResult['image_url']), 'Une capture accepte un calque absent ou vide.');
-        $plainImage = $request('GET', $plainResult['image_url']);
-        $decoded = imagecreatefromstring($plainImage['body']);
-        $check($plainImage['status'] === 200 && $plainImage['type'] === 'image/png'
-            && $decoded !== false && imagesx($decoded) === 4 && imagesy($decoded) === 4
-            && (imagecolorat($decoded, 0, 0) & 0xffffff) === 0x00ff00,
-            'La capture sans calque est enregistrée en PNG et conserve les pixels de base.');
+        $check($savedWithoutOverlay['status'] === 422 && isset($plainResult['error']),
+            'Une capture webcam sans calque est refusée côté serveur, même avec un CSRF valide.');
     }
+    $countImages->execute(['id' => $userId]);
+    $check((int) $countImages->fetchColumn() === $countBeforeMissingOverlay,
+        'Une capture sans calque ne crée aucun montage.');
     $check($request('POST', '/camedit.php', array_replace($fields, ['image' => $truncated]))['status'] === 422, 'Un PNG tronqué reste refusé sans calque.');
     $check(str_contains($history['body'], 'type="file"') && str_contains($history['body'], 'accept="image/png,image/jpeg"'), 'L’éditeur propose une image PNG ou JPEG comme alternative à la webcam.');
     $uploadFields = ['photo' => new CURLFile($path, 'image/png', 'photo.png'), 'overlay' => $name, 'csrf_token' => $token[1]];
@@ -407,9 +408,14 @@ try {
     $maximumResult = json_decode($maximum['body'], true);
     $check(($maximum['status'] === 422 && isset($maximumResult['error']))
         || ($maximum['status'] === 201 && isset($maximumResult['file_key'], $maximumResult['image'])), 'La taille maximale doit produire un montage ou un refus contrôlé, jamais une erreur fatale.');
-    $maximumWithoutOverlay = $request('POST', '/camedit.php', array_replace($fields, ['image' => $largeImage]));
+    $largeUploadPath = tempnam(sys_get_temp_dir(), 'camagru_large_');
+    $uploadPaths[] = $largeUploadPath;
+    file_put_contents($largeUploadPath, base64_decode(substr($largeImage, strlen('data:image/png;base64,')), true));
+    $maximumWithoutOverlay = $request('POST', '/camedit.php', [
+        'photo' => new CURLFile($largeUploadPath, 'image/png', 'large.png'), 'csrf_token' => $token[1],
+    ]);
     $check($maximumWithoutOverlay['status'] === 422 && isset(json_decode($maximumWithoutOverlay['body'], true)['error']),
-        'Le contrôle mémoire reste actif pour une grande image sans calque.');
+        'Le contrôle mémoire reste actif pour une grande image importée sans calque.');
     echo $checks . " vérifications réussies (stock, vignettes et montage serveur).\n";
 } finally {
     foreach ([$userId, $otherUserId] as $cleanupUserId) {
