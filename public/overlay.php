@@ -1,17 +1,14 @@
 <?php
 declare(strict_types=1);
 
+use Camagru\Http\Response;
 use Camagru\Services\OverlayCatalog;
 
-require_once dirname(__DIR__) . '/src/Services/OverlayCatalog.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    header('Allow: GET');
-    http_response_code(405);
-    exit;
-}
+Response::allowMethods('GET');
 
 try {
     if (!is_string($_GET['name'] ?? null)) {

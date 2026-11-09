@@ -2,33 +2,30 @@
 declare(strict_types=1);
 
 use Camagru\Database;
+use Camagru\Http\Csrf;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
 use Camagru\Repositories\UserRepository;
 use Camagru\Services\ActivationService;
 use Camagru\Services\RegistrationService;
+use Camagru\View\Page;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
-require_once dirname(__DIR__) . '/src/Services/ActivationService.php';
-require_once dirname(__DIR__) . '/src/Services/RegistrationService.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-session_start();
-header('Cache-Control: no-store');
+Session::start();
 
-if (isset($_SESSION['user_id'])) {
-    header('Location: /profile.php', true, 303);
-    exit;
+if (Session::userId() !== null) {
+    Response::redirect('/profile.php');
 }
 
 $errors = [];
 $values = ['login' => '', 'email' => ''];
-$success = $_SESSION['registration_success'] ?? false;
-unset($_SESSION['registration_success']);
+$success = Session::pullFlash('registration_success', false);
 
 // Le jeton lie l'envoi du formulaire à la session qui l'a affiché (protection CSRF).
-if (!isset($_SESSION['registration_csrf'])) {
-    $_SESSION['registration_csrf'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['registration_csrf'];
+$csrfToken = Csrf::token('registration');
+
+Response::allowMethods('GET', 'POST');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $success = false;
@@ -37,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $values[$field] = is_string($_POST[$field] ?? null) ? trim($_POST[$field]) : '';
     }
 
-    if (!is_string($_POST['csrf_token'] ?? null) || !hash_equals($csrfToken, $_POST['csrf_token'])) {
+    if (!Csrf::isValid('registration', $_POST['csrf_token'] ?? null)) {
         http_response_code(403);
         $errors['csrf'] = 'Le formulaire a expiré. Réessaie avec cette page.';
     } else {
@@ -51,11 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors = $registration->register($values['login'], $values['email'], $password, $confirmation);
 
             if ($errors === []) {
-                $_SESSION['registration_success'] = true;
-                $_SESSION['registration_csrf'] = bin2hex(random_bytes(32));
+                Session::flash('registration_success', true);
+                Csrf::renew('registration');
                 // Recharger la page de succès ne doit pas renvoyer une inscription.
-                header('Location: /register.php', true, 303);
-                exit;
+                Response::redirect('/register.php');
             }
 
             http_response_code(422);
@@ -66,12 +62,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log('Échec de l’inscription : ' . get_class($exception) . ' (' . $exception->getCode() . ').');
         }
     }
-} elseif ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    header('Allow: GET, POST');
-    http_response_code(405);
-    exit;
 }
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-
-require dirname(__DIR__) . '/templates/register.php';
+Page::render(
+    'register',
+    [
+        'success' => $success,
+        'errors' => $errors,
+        'values' => $values,
+        'csrfToken' => $csrfToken,
+    ],
+    title: 'Register — Camagru',
+    styles: ['/assets/css/auth.css'],
+    scripts: ['/assets/js/auth.js']
+);

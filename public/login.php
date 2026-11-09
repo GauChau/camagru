@@ -2,59 +2,51 @@
 declare(strict_types=1);
 
 use Camagru\Database;
-// use Camagru\Repositories\UserRepository;
-// use Camagru\Services\RegistrationService;
+use Camagru\Http\Csrf;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
 use Camagru\Repositories\UserRepository;
 use Camagru\Services\LoginService;
+use Camagru\View\Page;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
-require_once dirname(__DIR__) . '/src/Services/LoginService.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-session_start();
-header('Cache-Control: no-store');
+Session::start();
 
-if (isset($_SESSION['user_id'])) {
-    header('Location: /profile.php', true, 303);
-    exit;
+if (Session::userId() !== null) {
+    Response::redirect('/profile.php');
 }
 
 $errors = [];
-$recoverySuccess = $_SESSION['recovery_success'] ?? false;
-unset($_SESSION['recovery_success']);
+$recoverySuccess = Session::pullFlash('recovery_success', false);
 
-if (!isset($_SESSION['login_csrf'])) {
-    $_SESSION['login_csrf'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['login_csrf'];
+$csrfToken = Csrf::token('login');
 
-if($_SERVER['REQUEST_METHOD'] === 'POST')
-{
+Response::allowMethods('GET', 'POST');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = is_string($_POST['login'] ?? null) ? trim($_POST['login']) : '';
 
-    if (!is_string($_POST['csrf_token'] ?? null) || !hash_equals($csrfToken, $_POST['csrf_token'])) {
+    if (!Csrf::isValid('login', $_POST['csrf_token'] ?? null)) {
         http_response_code(403);
         $errors['csrf'] = 'Le formulaire a expiré. Réessaie avec cette page.';
-    }else{
+    } else {
         $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
 
-        try{
+        try {
             $users = new UserRepository(Database::connect());
-            $loginserv = new LoginService($users);
-            $errors = $loginserv->log($login, $password);
+            $loginService = new LoginService($users);
+            $errors = $loginService->log($login, $password);
             if ($errors === []) {
                 // Invalider la session anonyme avant de lui associer une identité.
-                if (!session_regenerate_id(true)) {
-                    throw new RuntimeException('Impossible de renouveler la session.');
-                }
-                $_SESSION['login_success'] = true;
-                $_SESSION['login_csrf'] = bin2hex(random_bytes(32));
+                Session::regenerate();
+                Session::flash('login_success', true);
+                Csrf::renew('login');
                 $_SESSION['user_id'] = $users->getUserId($login);
-                header('Location: /camedit.php', true, 303);
-                exit;
+                Response::redirect('/camedit.php');
             }
             http_response_code(422);
-        }catch (Throwable $exception) {
+        } catch (Throwable $exception) {
             http_response_code(503);
             $errors['login'] = 'Connexion momentanément indisponible. Réessaie plus tard.';
             error_log(sprintf(
@@ -66,14 +58,16 @@ if($_SERVER['REQUEST_METHOD'] === 'POST')
             ));
         }
     }
-
-}
-elseif ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    header('Allow: GET, POST');
-    http_response_code(405);
-    exit;
 }
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-
-require dirname(__DIR__) . '/templates/login.php';
+Page::render(
+    'login',
+    [
+        'recoverySuccess' => $recoverySuccess,
+        'errors' => $errors,
+        'csrfToken' => $csrfToken,
+    ],
+    title: 'Login — Camagru',
+    styles: ['/assets/css/auth.css'],
+    scripts: ['/assets/js/auth.js']
+);

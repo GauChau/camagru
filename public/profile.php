@@ -1,9 +1,20 @@
 <?php
-session_start();
+declare(strict_types=1);
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: /index.php');
-    exit;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
+use Camagru\View\Page;
+
+require_once dirname(__DIR__) . '/src/bootstrap.php';
+
+Session::start();
+
+if (Session::userId() === null) {
+    Response::redirect('/index.php', 302);
 }
 
-require dirname(__DIR__) . '/templates/profile.php';
+Page::render(
+    'profile',
+    title: 'Profile — Camagru',
+    styles: ['/assets/css/profile.css']
+);

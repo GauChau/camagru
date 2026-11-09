@@ -2,44 +2,31 @@
 declare(strict_types=1);
 
 use Camagru\Database;
+use Camagru\Http\Csrf;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
 use Camagru\Repositories\ImageRepository;
 use Camagru\Services\CamEditService;
 use Camagru\Services\OverlayCatalog;
+use Camagru\View\Page;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/ImageRepository.php';
-require_once dirname(__DIR__) . '/src/Services/CamEditService.php';
-require_once dirname(__DIR__) . '/src/Services/OverlayCatalog.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-session_start();
-header('Cache-Control: no-store');
+Session::start();
 
-if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
-    header('Allow: GET, POST');
-    http_response_code(405);
-    exit;
-}
+Response::allowMethods('GET', 'POST');
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_SESSION['user_id'])) {
-    header('Location: /login.php', true, 303);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && Session::userId() === null) {
+    Response::redirect('/login.php');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Content-Type: application/json; charset=utf-8');
-
-    if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Connecte-toi pour enregistrer une capture.']);
-        exit;
+    if (Session::userId() === null) {
+        Response::json(['error' => 'Connecte-toi pour enregistrer une capture.'], 401);
     }
 
-    if (!is_string($_SESSION['camedit_csrf'] ?? null)
-        || !is_string($_POST['csrf_token'] ?? null)
-        || !hash_equals($_SESSION['camedit_csrf'], $_POST['csrf_token'])) {
-        http_response_code(403);
-        echo json_encode(['error' => 'La session a expiré. Recharge la page.']);
-        exit;
+    if (!Csrf::isValid('camedit', $_POST['csrf_token'] ?? null)) {
+        Response::json(['error' => 'La session a expiré. Recharge la page.'], 403);
     }
 
     try {
@@ -62,28 +49,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $service = new CamEditService($images, new OverlayCatalog());
 
         if (isset($_FILES['photo'])) {
-            $result = $service->uploadFile((int) $_SESSION['user_id'], $_FILES['photo'], $overlayNames);
+            $result = $service->uploadFile(Session::userId(), $_FILES['photo'], $overlayNames);
         } else {
-            $result = $service->uploadImage((int) $_SESSION['user_id'], $_POST['image'], $overlayNames);
+            $result = $service->uploadImage(Session::userId(), $_POST['image'], $overlayNames);
         }
 
-        http_response_code(201);
-        echo json_encode($result);
+        Response::json($result, 201);
     } catch (InvalidArgumentException $exception) {
-        http_response_code(422);
-        echo json_encode(['error' => $exception->getMessage()]);
+        Response::json(['error' => $exception->getMessage()], 422);
     } catch (Throwable $exception) {
         error_log('Échec de la capture : ' . $exception->getMessage());
-        http_response_code(503);
-        echo json_encode(['error' => 'Impossible d’enregistrer la capture. Réessaie plus tard.']);
+        Response::json(['error' => 'Impossible d’enregistrer la capture. Réessaie plus tard.'], 503);
     }
-    exit;
 }
 
-if (!is_string($_SESSION['camedit_csrf'] ?? null)) {
-    $_SESSION['camedit_csrf'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['camedit_csrf'];
+$csrfToken = Csrf::token('camedit');
 $overlayError = null;
 try {
     $overlayNames = (new OverlayCatalog())->listImages();
@@ -97,11 +77,23 @@ try {
 $previousImages = [];
 $photosError = null;
 try {
-    $previousImages = (new ImageRepository(Database::connect()))->getUserImageListByDate((int) $_SESSION['user_id']);
+    $previousImages = (new ImageRepository(Database::connect()))->getUserImageListByDate(Session::userId());
 } catch (Throwable $exception) {
     http_response_code(503);
     $photosError = 'Tes créations sont momentanément indisponibles. Réessaie plus tard.';
     error_log('Échec de l’historique des montages : ' . get_class($exception) . '.');
 }
 
-require dirname(__DIR__) . '/templates/camedit.php';
+Page::render(
+    'camedit',
+    [
+        'csrfToken' => $csrfToken,
+        'overlayError' => $overlayError,
+        'overlayNames' => $overlayNames,
+        'photosError' => $photosError,
+        'previousImages' => $previousImages,
+    ],
+    title: 'Camedit — Camagru',
+    styles: ['/assets/css/camedit.css'],
+    scripts: ['/assets/js/camedit.js']
+);

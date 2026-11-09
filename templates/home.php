@@ -1,9 +1,3 @@
-<?php
-$pageTitle = 'Camagru';
-$pageStyles = ['/assets/css/home.css'];
-$pageScripts = ['/assets/js/main.js'];
-require __DIR__ . '/partials/header.php';
-?>
     <main class="welcome" aria-labelledby="welcome-title">
         <h1 class="wordmark" id="welcome-title">Camagru</h1>
         <div class="welcome-actions" role="group" aria-label="Accès au compte">
@@ -17,4 +11,3 @@ require __DIR__ . '/partials/header.php';
             <?php endif; ?>
         </div>
     </main>
-<?php require __DIR__ . '/partials/footer.php'; ?>

@@ -2,46 +2,36 @@
 declare(strict_types=1);
 
 use Camagru\Database;
+use Camagru\Http\Csrf;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
 use Camagru\Repositories\UserRepository;
 use Camagru\Services\UserSettingsService;
+use Camagru\View\Page;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
-require_once dirname(__DIR__) . '/src/Services/UserSettingsService.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-session_start();
-header('Cache-Control: no-store');
+Session::start();
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: /login.php', true, 303);
-    exit;
+if (Session::userId() === null) {
+    Response::redirect('/login.php');
 }
-if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
-    header('Allow: GET, POST');
-    http_response_code(405);
-    exit;
-}
+Response::allowMethods('GET', 'POST');
 
 $errors = [];
 $values = ['login' => '', 'email' => '', 'comment_notifications' => true];
-$success = ($_SESSION['settings_success'] ?? false) === true;
-unset($_SESSION['settings_success']);
+$success = Session::pullFlash('settings_success', false) === true;
 
-if (!isset($_SESSION['settings_csrf'])) {
-    $_SESSION['settings_csrf'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['settings_csrf'];
+$csrfToken = Csrf::token('settings');
 
 try {
     $users = new UserRepository(Database::connect());
     // L'identifiant vient exclusivement de la session, jamais du formulaire.
-    $userId = (int) $_SESSION['user_id'];
+    $userId = Session::userId();
     $user = $users->findById($userId);
     if ($user === null) {
-        $_SESSION = [];
-        session_destroy();
-        header('Location: /login.php', true, 303);
-        exit;
+        Session::logout();
+        Response::redirect('/login.php');
     }
     $values = ['login' => $user['login'], 'email' => $user['email'], 'comment_notifications' => $user['comment_notifications']];
 
@@ -51,7 +41,7 @@ try {
         $values['email'] = is_string($_POST['email'] ?? null) ? strtolower(trim($_POST['email'])) : '';
         $values['comment_notifications'] = ($_POST['comment_notifications'] ?? null) === '1';
 
-        if (!is_string($_POST['csrf_token'] ?? null) || !hash_equals($csrfToken, $_POST['csrf_token'])) {
+        if (!Csrf::isValid('settings', $_POST['csrf_token'] ?? null)) {
             http_response_code(403);
             $errors['csrf'] = 'The form has expired. Please try again.';
         } else {
@@ -78,11 +68,10 @@ try {
                 );
             }
             if ($errors === []) {
-                session_regenerate_id(true);
-                $_SESSION['settings_success'] = true;
-                $_SESSION['settings_csrf'] = bin2hex(random_bytes(32));
-                header('Location: /settings.php', true, 303);
-                exit;
+                Session::regenerate();
+                Session::flash('settings_success', true);
+                Csrf::renew('settings');
+                Response::redirect('/settings.php');
             }
             http_response_code(422);
         }
@@ -94,5 +83,15 @@ try {
     error_log('Échec des paramètres : ' . get_class($exception) . ' (' . $exception->getCode() . ').');
 }
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-require dirname(__DIR__) . '/templates/settings.php';
+Page::render(
+    'settings',
+    [
+        'success' => $success,
+        'errors' => $errors,
+        'values' => $values,
+        'csrfToken' => $csrfToken,
+    ],
+    title: 'User settings — Camagru',
+    styles: ['/assets/css/auth.css', '/assets/css/settings.css'],
+    scripts: ['/assets/js/auth.js']
+);

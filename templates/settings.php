@@ -1,9 +1,3 @@
-<?php
-$pageTitle = 'User settings — Camagru';
-$pageStyles = ['/assets/css/auth.css', '/assets/css/settings.css'];
-$pageScripts = ['/assets/js/auth.js'];
-require __DIR__ . '/partials/header.php';
-?>
     <main class="auth-page settings-page" aria-labelledby="settings-title">
         <div class="auth-panel settings-panel">
             <h1 id="settings-title">User settings</h1>
@@ -53,4 +47,3 @@ require __DIR__ . '/partials/header.php';
             <p class="auth-switch"><a href="/profile.php">Back to my profile</a></p>
         </div>
     </main>
-<?php require __DIR__ . '/partials/footer.php'; ?>

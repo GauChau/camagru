@@ -36,15 +36,20 @@ configuration dans `docker/` ou du Dockerfile, relancer `make`.
 
 | Emplacement | À compléter |
 | --- | --- |
-| `public/index.php` | Réception et routage des requêtes |
+| `public/*.php` | Réception des requêtes et choix des réponses |
 | `public/assets/` | CSS, JavaScript natif, PNG transparents |
-| `src/Controllers/` | Actions HTTP |
+| `src/bootstrap.php` | Chargement commun des classes |
+| `src/Http/` | Sessions, CSRF et réponses HTTP |
+| `src/View/` | Rendu des pages et échappement HTML |
 | `src/Services/` | Logique métier et contrôles communs |
 | `src/Repositories/` | Requêtes SQL via PDO |
 | `templates/` | Pages HTML rendues par PHP |
 | `database/001_schema.sql` | Tables et contraintes |
 | `storage/` | Montages ; volume Docker hors racine web |
 | `tests/` | Scénarios et vérifications à écrire |
+
+Voir [l’organisation des pages PHP](docs/php-architecture.md) pour ajouter une
+page, protéger un formulaire et utiliser les fonctions partagées.
 
 Seul `public/` est exposé par Apache. Le volume `storage` est accessible dans le
 conteneur à `/var/www/html/storage`, avec les droits de l'utilisateur Apache.

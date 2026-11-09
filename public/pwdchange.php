@@ -2,29 +2,27 @@
 declare(strict_types=1);
 
 use Camagru\Database;
+use Camagru\Http\Csrf;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
 use Camagru\Repositories\UserRepository;
 use Camagru\Services\PasswordRecoveryService;
+use Camagru\View\Page;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
-require_once dirname(__DIR__) . '/src/Services/PasswordRecoveryService.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-session_start();
+Session::start();
 $errors = [];
-$success = $_SESSION['pwdchange_success'] ?? false;
-unset($_SESSION['pwdchange_success']);
-header('Cache-Control: no-store');
+$success = Session::pullFlash('pwdchange_success', false);
 
-if (isset($_SESSION['user_id'])) {
-    header('Location: /gallery.php', true, 303);
-    exit;
+if (Session::userId() !== null) {
+    Response::redirect('/gallery.php');
 }
-if (!isset($_SESSION['pwdchange_csrf'])) {
-    $_SESSION['pwdchange_csrf'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['pwdchange_csrf'];
+$csrfToken = Csrf::token('pwdchange');
+Response::allowMethods('GET', 'POST');
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!is_string($_POST['csrf_token'] ?? null) || !hash_equals($csrfToken, $_POST['csrf_token'])) {
+    if (!Csrf::isValid('pwdchange', $_POST['csrf_token'] ?? null)) {
         http_response_code(403);
         $errors['csrf'] = 'Le formulaire a expiré. Réessaie avec cette page.';
     } else {
@@ -34,10 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $recovery = new PasswordRecoveryService($users);
             $errors = $recovery->requestRecovery($email);
             if ($errors === []) {
-                $_SESSION['pwdchange_success'] = true;
-                $_SESSION['pwdchange_csrf'] = bin2hex(random_bytes(32));
-                header('Location: /pwdchange.php', true, 303);
-                exit;
+                Session::flash('pwdchange_success', true);
+                Csrf::renew('pwdchange');
+                Response::redirect('/pwdchange.php');
             }
             http_response_code(422);
         } catch (Throwable $exception) {
@@ -47,11 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log('Échec de récupération : ' . get_class($exception) . ' (' . $exception->getCode() . ').');
         }
     }
-} elseif ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    header('Allow: GET, POST');
-    http_response_code(405);
-    exit;
 }
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-require dirname(__DIR__) . '/templates/pwdchange.php';
+Page::render(
+    'pwdchange',
+    [
+        'success' => $success,
+        'errors' => $errors,
+        'csrfToken' => $csrfToken,
+    ],
+    title: 'Password Change - Camagru',
+    styles: ['/assets/css/auth.css']
+);

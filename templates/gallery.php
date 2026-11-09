@@ -1,9 +1,3 @@
-<?php
-$pageTitle = 'Gallery — Camagru';
-$pageStyles = ['/assets/css/gallery.css'];
-$pageScripts = [];
-require __DIR__ . '/partials/header.php';
-?>
     <main class="gallery-page" aria-labelledby="gallery-title">
         <div class="gallery-heading">
             <div>
@@ -105,4 +99,3 @@ require __DIR__ . '/partials/header.php';
             <?php endif; ?>
         <?php endif; ?>
     </main>
-<?php require __DIR__ . '/partials/footer.php'; ?>

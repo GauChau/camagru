@@ -2,38 +2,31 @@
 declare(strict_types=1);
 
 use Camagru\Database;
+use Camagru\Http\Csrf;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
 use Camagru\Repositories\UserRepository;
 use Camagru\Services\PasswordRecoveryService;
+use Camagru\View\Page;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
-require_once dirname(__DIR__) . '/src/Services/PasswordRecoveryService.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-session_start();
+Session::start();
 $errors = [];
-header('Cache-Control: no-store');
 header('Referrer-Policy: no-referrer');
 
-if (isset($_SESSION['user_id'])) {
-    header('Location: /gallery.php', true, 303);
-    exit;
+if (Session::userId() !== null) {
+    Response::redirect('/gallery.php');
 }
-if (!isset($_SESSION['recovery_csrf'])) {
-    $_SESSION['recovery_csrf'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['recovery_csrf'];
+$csrfToken = Csrf::token('recovery');
 $tokenInput = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($_POST['token'] ?? null) : ($_GET['token'] ?? null);
 $token = is_string($tokenInput) ? $tokenInput : '';
 $canReset = false;
 
-if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
-    header('Allow: GET, POST');
-    http_response_code(405);
-    exit;
-}
+Response::allowMethods('GET', 'POST');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && (!is_string($_POST['csrf_token'] ?? null) || !hash_equals($csrfToken, $_POST['csrf_token']))) {
+    && !Csrf::isValid('recovery', $_POST['csrf_token'] ?? null)) {
     http_response_code(403);
     $errors['csrf'] = 'Le formulaire a expiré. Rouvre le lien reçu par email.';
 } else {
@@ -49,10 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
             $confirmation = is_string($_POST['confirm_password'] ?? null) ? $_POST['confirm_password'] : '';
             $errors = $recovery->resetPassword($token, $password, $confirmation);
             if ($errors === []) {
-                $_SESSION['recovery_success'] = true;
-                $_SESSION['recovery_csrf'] = bin2hex(random_bytes(32));
-                header('Location: /login.php', true, 303);
-                exit;
+                Session::flash('recovery_success', true);
+                Csrf::renew('recovery');
+                Response::redirect('/login.php');
             }
             $canReset = !isset($errors['token']);
             http_response_code($canReset ? 422 : 400);
@@ -65,5 +57,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     }
 }
 
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-require dirname(__DIR__) . '/templates/recovery.php';
+Page::render(
+    'recovery',
+    [
+        'canReset' => $canReset,
+        'errors' => $errors,
+        'token' => $token,
+        'csrfToken' => $csrfToken,
+    ],
+    title: 'Password Change - Camagru',
+    styles: ['/assets/css/auth.css'],
+    scripts: ['/assets/js/auth.js']
+);

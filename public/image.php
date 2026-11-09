@@ -2,17 +2,13 @@
 declare(strict_types=1);
 
 use Camagru\Database;
+use Camagru\Http\Response;
 use Camagru\Repositories\ImageRepository;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/ImageRepository.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
 header('X-Content-Type-Options: nosniff');
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    header('Allow: GET');
-    http_response_code(405);
-    exit;
-}
+Response::allowMethods('GET');
 $id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 2147483647]]);
 if (!$id) {
     http_response_code(404);

@@ -1,9 +1,3 @@
-<?php
-$pageTitle = 'Login — Camagru';
-$pageStyles = ['/assets/css/auth.css'];
-$pageScripts = ['/assets/js/auth.js'];
-require __DIR__ . '/partials/header.php';
-?>
     <main class="auth-page" aria-labelledby="auth-title">
         <div class="auth-panel">
             <h1 id="auth-title">Login</h1>
@@ -32,4 +26,3 @@ require __DIR__ . '/partials/header.php';
             <p class="auth-switch">Pas encore de compte ? <a href="/register.php">Register</a></p>
         </div>
     </main>
-<?php require __DIR__ . '/partials/footer.php'; ?>

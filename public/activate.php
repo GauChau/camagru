@@ -2,22 +2,19 @@
 declare(strict_types=1);
 
 use Camagru\Database;
+use Camagru\Http\Csrf;
+use Camagru\Http\Response;
+use Camagru\Http\Session;
 use Camagru\Repositories\UserRepository;
 use Camagru\Services\ActivationService;
+use Camagru\View\Page;
 
-require_once dirname(__DIR__) . '/src/Database.php';
-require_once dirname(__DIR__) . '/src/Repositories/UserRepository.php';
-require_once dirname(__DIR__) . '/src/Services/ActivationService.php';
+require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-session_start();
-header('Cache-Control: no-store');
+Session::start();
 header('Referrer-Policy: no-referrer');
 
-if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
-    header('Allow: GET, POST');
-    http_response_code(405);
-    exit;
-}
+Response::allowMethods('GET', 'POST');
 
 $errors = [];
 $success = false;
@@ -25,16 +22,13 @@ $resendSuccess = false;
 $email = '';
 $token = is_string($_GET['token'] ?? null) ? $_GET['token'] : '';
 
-if (!isset($_SESSION['activation_resend_csrf'])) {
-    $_SESSION['activation_resend_csrf'] = bin2hex(random_bytes(32));
-}
+$csrfToken = Csrf::token('activation_resend');
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = is_string($_POST['email'] ?? null) ? strtolower(trim($_POST['email'])) : '';
 
-        if (!is_string($_POST['csrf_token'] ?? null)
-            || !hash_equals($_SESSION['activation_resend_csrf'], $_POST['csrf_token'])) {
+        if (!Csrf::isValid('activation_resend', $_POST['csrf_token'] ?? null)) {
             http_response_code(403);
             $errors['csrf'] = 'The form has expired. Please try again.';
         } elseif (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
@@ -47,7 +41,7 @@ try {
             $resendSuccess = $errors === [];
 
             if ($resendSuccess) {
-                $_SESSION['activation_resend_csrf'] = bin2hex(random_bytes(32));
+                $csrfToken = Csrf::renew('activation_resend');
             } else {
                 http_response_code(502);
             }
@@ -67,7 +61,16 @@ try {
     error_log('Échec de l’activation : ' . get_class($exception) . ' (' . $exception->getCode() . ').');
 }
 
-$csrfToken = $_SESSION['activation_resend_csrf'];
-$escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-
-require dirname(__DIR__) . '/templates/activate.php';
+Page::render(
+    'activate',
+    [
+        'success' => $success,
+        'resendSuccess' => $resendSuccess,
+        'token' => $token,
+        'errors' => $errors,
+        'email' => $email,
+        'csrfToken' => $csrfToken,
+    ],
+    title: 'Activation — Camagru',
+    styles: ['/assets/css/auth.css']
+);

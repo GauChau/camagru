@@ -1,10 +1,3 @@
-<?php
-$pageTitle = 'Camedit — Camagru';
-$pageStyles = ['/assets/css/camedit.css'];
-$pageScripts = ['/assets/js/camedit.js'];
-require __DIR__ . '/partials/header.php';
-?>
-
 <main class="camedit">
     <div class="editor-layout">
         <section class="camera-panel" aria-label="Création d’un montage">
@@ -21,22 +14,22 @@ require __DIR__ . '/partials/header.php';
                 <small id="photo-help">PNG ou JPEG · 5 Mo maximum · 4096 × 4096 pixels maximum.</small>
             </div>
             <button id="snap" class="button button-solid" type="button" disabled
-                data-csrf-token="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">Capturer</button>
+                data-csrf-token="<?= $escape($csrfToken) ?>">Capturer</button>
             <p id="camera-status" role="status">Active la webcam et choisis au moins un sticker, ou importe une image avec ou sans sticker.</p>
             <fieldset class="overlay-picker">
                 <legend>Choisis tes stickers</legend>
                 <p>Coche plusieurs stickers pour les superposer (20 maximum). Décoche-les pour les retirer. Ils se superposent dans l’ordre du catalogue. Au moins un sticker est nécessaire pour la capture webcam.</p>
                 <?php if ($overlayError !== null): ?>
-                    <p role="alert"><?= htmlspecialchars($overlayError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
+                    <p role="alert"><?= $escape($overlayError) ?></p>
                 <?php elseif ($overlayNames === []): ?>
                     <p>Aucun calque disponible pour le moment.</p>
                 <?php else: ?>
                     <div class="overlay-list">
                         <?php foreach ($overlayNames as $overlayName): ?>
                             <label class="overlay-option">
-                                <input type="checkbox" name="overlays[]" value="<?= htmlspecialchars($overlayName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+                                <input type="checkbox" name="overlays[]" value="<?= $escape($overlayName) ?>">
                                 <img src="/overlay.php?name=<?= rawurlencode($overlayName) ?>" alt="" loading="lazy">
-                                <span><?= htmlspecialchars(pathinfo($overlayName, PATHINFO_FILENAME), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
+                                <span><?= $escape(pathinfo($overlayName, PATHINFO_FILENAME)) ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -46,7 +39,7 @@ require __DIR__ . '/partials/header.php';
         <aside class="photos-panel" aria-labelledby="photos-title">
             <h2 id="photos-title">Mes créations</h2>
             <?php if ($photosError !== null): ?>
-                <p id="photos-error" role="alert"><?= htmlspecialchars($photosError, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
+                <p id="photos-error" role="alert"><?= $escape($photosError) ?></p>
             <?php endif; ?>
             <p id="photos-empty"<?= $previousImages !== [] || $photosError !== null ? ' hidden' : '' ?>>Aucune création pour le moment.</p>
             <ul id="photos-list" class="photos-list"<?= $previousImages === [] ? ' hidden' : '' ?>>
@@ -61,6 +54,3 @@ require __DIR__ . '/partials/header.php';
         </aside>
     </div>
 </main>
-
-<?php
-require __DIR__ . '/partials/footer.php';
