@@ -7,12 +7,10 @@ use Camagru\Http\Session;
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 
-header('Cache-Control: no-store');
+Session::start();
 
 // Une déconnexion doit venir du formulaire envoyé en POST.
 Response::allowMethods('POST');
-
-Session::start();
 
 if (!Csrf::isValid('logout', $_POST['csrf_token'] ?? null)) {
     http_response_code(403);

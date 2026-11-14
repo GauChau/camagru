@@ -10,7 +10,7 @@ require_once dirname(__DIR__) . '/src/bootstrap.php';
 Session::start();
 
 if (Session::userId() === null) {
-    Response::redirect('/index.php', 302);
+    Response::redirect('/index.php');
 }
 
 Page::render(

@@ -28,6 +28,19 @@ final class Session
         }
     }
 
+    /** Associe une identité à une session neuve : l'ancien identifiant est invalidé. */
+    public static function login(int $userId): void
+    {
+        self::regenerate();
+        $_SESSION['user_id'] = $userId;
+    }
+
+    /** Oublie l'identité courante sans détruire la session (compte supprimé, par exemple). */
+    public static function forget(): void
+    {
+        unset($_SESSION['user_id']);
+    }
+
     public static function flash(string $key, mixed $value): void
     {
         $_SESSION[$key] = $value;

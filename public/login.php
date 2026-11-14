@@ -37,12 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $users = new UserRepository(Database::connect());
             $loginService = new LoginService($users);
             $errors = $loginService->log($login, $password);
-            if ($errors === []) {
-                // Invalider la session anonyme avant de lui associer une identité.
-                Session::regenerate();
+            $userId = $errors === [] ? $users->getUserId($login) : null;
+            if ($userId !== null) {
+                // Invalide la session anonyme avant de lui associer une identité.
+                Session::login($userId);
                 Session::flash('login_success', true);
                 Csrf::renew('login');
-                $_SESSION['user_id'] = $users->getUserId($login);
                 Response::redirect('/camedit.php');
             }
             http_response_code(422);

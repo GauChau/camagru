@@ -32,7 +32,7 @@ try {
     $database = Database::connect();
     $imageRepository = new ImageRepository($database);
     if ($userId !== null && (new UserRepository($database))->findById($userId) === null) {
-        unset($_SESSION['user_id']);
+        Session::forget();
         $userId = null;
     }
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -97,6 +97,19 @@ foreach (array_merge($forms, ['/gallery.php', '/camedit.php', '/recovery.php', '
         $path . ' doit annoncer ses méthodes HTTP autorisées.');
 }
 
+foreach (['/index.php', '/gallery.php'] as $path) {
+    $page = $request('GET', $path);
+    $check($page['status'] === 200
+        && substr_count(strtolower($page['body']), '<!doctype html>') === 1
+        && substr_count($page['body'], 'class="site-footer"') === 1,
+        $path . ' doit s’afficher avec une seule enveloppe HTML.');
+}
+foreach (['/settings.php' => '/login.php', '/profile.php' => '/index.php'] as $path => $target) {
+    $response = $request('GET', $path);
+    $check($response['status'] === 303 && ($response['headers']['location'] ?? '') === $target,
+        $path . ' doit rediriger les visiteurs anonymes vers ' . $target . '.');
+}
+
 $response = $request('GET', '/camedit.php');
 $check($response['status'] === 303 && ($response['headers']['location'] ?? '') === '/login.php',
     'L’éditeur doit rediriger les visiteurs vers la connexion.');

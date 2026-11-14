@@ -6,10 +6,10 @@
     <title><?= $escape($pageTitle) ?></title>
     <link rel="preload" href="/assets/fonts/the-future-black-italic.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/assets/css/layout.css">
-    <?php foreach ($pageStyles ?? [] as $stylesheet): ?>
+    <?php foreach ($pageStyles as $stylesheet): ?>
         <link rel="stylesheet" href="<?= $escape($stylesheet) ?>">
     <?php endforeach; ?>
-    <?php foreach ($pageScripts ?? [] as $script): ?>
+    <?php foreach ($pageScripts as $script): ?>
         <script src="<?= $escape($script) ?>" defer></script>
     <?php endforeach; ?>
 </head>
